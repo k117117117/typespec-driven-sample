@@ -1,0 +1,5 @@
+# IDE
+*.sln
+
+# MacOS
+.DS_Store

@@ -1,0 +1,17 @@
+{
+  "name": "typespec-driven-sample",
+  "private": true,
+  "description": "TypeSpec-driven admin tool (monorepo root)",
+  "scripts": {
+    "tsp:compile": "docker compose build typespec && docker compose run --rm typespec",
+    "nswag:generate": "cd admin.backend && dotnet build -t:NSwag",
+    "tsp-and-nswag": "npm run tsp:compile && npm run nswag:generate",
+    "build:backend": "cd admin.backend && dotnet build",
+    "build:frontend": "cd admin.frontend && npm install && npm run build",
+    "build:all": "npm run tsp-and-nswag && npm run build:backend && npm run build:frontend",
+    "up": "docker compose up",
+    "up:build": "docker compose up --build",
+    "down": "docker compose down",
+    "down:clean": "docker compose down -v"
+  }
+}
