@@ -1,0 +1,45 @@
+{
+  "runtime": "Net90",
+  "documentGenerator": {
+    "fromDocument": {
+      "json": "",
+      "url": "",
+      "output": null
+    }
+  },
+  "codeGenerators": {
+    "openApiToCSharpController": {
+      "controllerBaseClass": null,
+      "controllerStyle": "Abstract",
+      "controllerTarget": "AspNetCore",
+      "useCancellationToken": true,
+      "useActionResultType": true,
+      "generateModelValidationAttributes": true,
+      "routeNamingStrategy": "OperationId",
+      "basePath": null,
+      "className": "{controller}Controller",
+      "operationGenerationMode": "MultipleClientsFromOperationId",
+      "additionalNamespaceUsages": [],
+      "additionalContractNamespaceUsages": [],
+      "generateOptionalParameters": true,
+      "generateJsonMethods": false,
+      "enforceFlagEnums": false,
+      "parameterDateTimeFormat": "s",
+      "parameterDateFormat": "yyyy-MM-dd",
+      "generateUpdateJsonSerializerSettingsMethod": true,
+      "serializeTypeInformation": false,
+      "queryNullValue": "",
+      "className": "{controller}ControllerBase",
+      "namespace": "Backend.Generated",
+      "output": null,
+      "newLineBehavior": "Auto",
+      "generateAbstractControllers": true,
+      "responseArrayType": "System.Collections.Generic.List",
+      "responseDictionaryType": "System.Collections.Generic.Dictionary",
+      "wrapResponses": false,
+      "generateResponseClasses": true,
+      "responseClass": "SwaggerResponse",
+      "jsonLibrary": "SystemTextJson"
+    }
+  }
+}
