@@ -9,8 +9,8 @@
     "build:backend": "cd admin.backend && dotnet build",
     "build:frontend": "cd admin.frontend && npm install && npm run build",
     "build:all": "npm run tsp-and-nswag && npm run build:backend && npm run build:frontend",
-    "up": "docker compose up",
-    "up:build": "docker compose up --build",
+    "up": "docker compose up -d",
+    "up:build": "docker compose up -d --build",
     "down": "docker compose down",
     "down:clean": "docker compose down -v"
   }
