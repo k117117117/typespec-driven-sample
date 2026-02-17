@@ -294,5 +294,3 @@ https://api-platform.com/docs/admin/components/#openapiadmin
 - [ ] 自動生成したAPIクライアント(TypeScript)をWebフロントエンドで使うサンプルの追加
 - [ ] TypeSpecで定義したmodelから生成されたC#クラス(APIのDTO)を複数のプロジェクト間で共通して使用するサンプルの追加
 - [ ] NSwagのコード生成でliquidを使用した出力テンプレートのカスタマイズをするサンプルの追加  
-[NSwagのTemplatesについて](https://github.com/RicoSuter/NSwag/wiki/Templates)  
-NSwag.jsonの`TemplateDirectory`で指定したディレクトリに上書きした.liquidファイルを配置するとそちらのテンプレートに基づいてコード生成を行うようになるらしい  
