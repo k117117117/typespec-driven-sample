@@ -6,9 +6,6 @@ TypeSpec を軸にしたスキーマ駆動な管理ツール開発のサンプ�
 - NSwag で OpenAPI仕様 から ASP.NET Core コントローラーを自動生成（バックエンド）
 - API Platform Admin (`OpenApiAdmin`) が OpenAPI 仕様をパースして CRUD UI を自動構築（フロントエンド）
 
-ゆくゆくは TypeSpec を軸にしたコントラクトファースト開発のサンプルに拡張できたらいいなと思っています（思っているだけ）  
-（自動生成した API クライアントを Unity や他のサーバーで使う例、管理ツールの対象となるサーバーとの接続、TypeSpec で定義した model から生成したクラスの共有方法のサンプル追加など）
-
 ## アーキテクチャ
 
 ### 概要
@@ -290,3 +287,12 @@ https://marmelab.com/react-admin/Routing.html
 https://marmelab.com/react-admin/Resource.html
 - API Platform Admin Components (OpenApiAdmin)  
 https://api-platform.com/docs/admin/components/#openapiadmin
+
+## ToDo 
+思っているだけで実際にやるかは別ですがTypeSpecを軸にしたスキーマ駆動&コントラクトファースト開発のサンプルに拡張できたらいいなと思っています  
+- [ ] 自動生成したAPIクライアント(C#)をUnityや別のサーバーで使うサンプルの追加
+- [ ] 自動生成したAPIクライアント(TypeScript)をWebフロントエンドで使うサンプルの追加
+- [ ] TypeSpecで定義したmodelから生成されたC#クラス(APIのDTO)を複数のプロジェクト間で共通して使用するサンプルの追加
+- [ ] NSwagのコード生成でliquidを使用した出力テンプレートのカスタマイズをするサンプルの追加  
+[NSwagのTemplatesについて](https://github.com/RicoSuter/NSwag/wiki/Templates)  
+NSwag.jsonの`TemplateDirectory`で指定したディレクトリに上書きした.liquidファイルを配置するとそちらのテンプレートに基づいてコード生成を行うようになるらしい  
