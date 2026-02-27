@@ -17,6 +17,7 @@
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.*">
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
+    <PackageReference Include="Scalar.AspNetCore" Version="2.12.48" />
   </ItemGroup>
 
   <Target Name="NSwag" BeforeTargets="PrepareForBuild" Condition="'$(SkipNSwag)' != 'true' And Exists('..\typespec\tsp-output\schema\openapi.json')">

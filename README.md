@@ -86,6 +86,7 @@ docker compose up -d
 | http://localhost | フロントエンド (nginx → Vite dev server へのリバースプロキシ) |
 | http://localhost:3000 | フロントエンド (Vite dev server 直接) |
 | http://localhost:8080 | バックエンド API (nginx → ASP.NET Core へのリバースプロキシ) |
+| http://localhost:8080/scalar | Scalar API リファレンス UI |
 | http://localhost:5432 | PostgreSQL |
 
 > **Note:** 開発環境では Vite dev server (`:3000`) や Kestrel (`:5000`) に直接アクセスしても動作します。nginx は本番構成を想定したリバースプロキシの例として配置しています。

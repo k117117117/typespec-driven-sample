@@ -1,5 +1,6 @@
 using Backend.Data;
 using Microsoft.EntityFrameworkCore;
+using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -30,6 +31,12 @@ using (var scope = app.Services.CreateScope())
 }
 
 app.UseCors();
+
+// https://scalar.com/products/api-references/integrations/aspnetcore/integration#openapi-document-route
+app.MapScalarApiReference(options =>
+{
+    options.WithOpenApiRoutePattern("/openapi.json");
+});
 app.MapControllers();
 
 app.MapGet("/openapi.json", async () =>
