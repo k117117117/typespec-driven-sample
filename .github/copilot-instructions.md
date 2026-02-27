@@ -1,0 +1,1 @@
+F:/Dev/typespec-driven-sample/AGENTS.md
