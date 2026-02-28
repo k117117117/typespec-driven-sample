@@ -99,9 +99,10 @@ npm run up:build        # docker compose up -d --build
 npm run down            # docker compose down
 npm run down:clean      # docker compose down -v (ボリュームも削除)
 
-npm run tsp-and-nswag   # TypeSpec コンパイル + NSwag コード生成 (セット)
+npm run tsp-and-nswag   # TypeSpec コンパイル + NSwag コード生成 + 孤立エンティティ削除 (セット)
 npm run tsp:compile     # TypeSpec コンパイルのみ
 npm run nswag:generate  # NSwag コード生成のみ
+npm run clean:orphan-entities  # 孤立 *Entity.cs の検出・削除
 
 npm run build:backend   # バックエンドビルド
 npm run build:frontend  # フロントエンドビルド
