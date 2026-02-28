@@ -5,75 +5,75 @@
 This is a **TypeSpec-driven schema-first** monorepo containing multiple backend services. The data flow is:
 
 ```
-typespec/shared/model.tsp   ← 基盤モデル（サービス横断の概念定義）
-typespec/<service>/model.tsp ← サービス固有モデル（extends / Spread で拡張可能）
-typespec/<service>/operations.tsp ← ルート定義
+typespec/shared/model.tsp            ← Base models (cross-service concept definitions)
+typespec/<service>/model.tsp         ← Service-specific models (extendable via extends / Spread)
+typespec/<service>/operations.tsp    ← Route definitions
          ↓ (tsp compile)
 typespec/tsp-output/schema/openapi.<service>.json
          ↓ (NSwag)
-<service>/Generated/Controllers.g.cs  ← 抽象コントローラー + DTO
+<service>/Generated/Controllers.g.cs ← Abstract controllers + DTOs
          ↓ (manual)
-<service>/Controllers/  ← 実装コントローラー
+<service>/Controllers/               ← Implementation controllers
 ```
 
 **Key principle:** TypeSpec `.tsp` files are the single source of truth for the API contract. All downstream artifacts (OpenAPI spec, C# controllers, frontend UI) derive from them.
 
 ## Design Principles
 
-### TypeSpec のモデル共有とサービスごとの独立性
+### TypeSpec Model Sharing and Per-Service Independence
 
-- `typespec/shared/model.tsp` は **基盤となる概念** を定義する場所。全サービスから `import` できる。
-- 各サービス固有の拡張が必要なら、`typespec/<service>/model.tsp` で `extends` や `...`（Spread）を使って拡張モデルを定義する。
-- **C# の共有クラスライブラリ（shared.models 等）は不要。** NSwag がサービスごとに独立した DTO を自動生成するため、C# レベルでの型共有は行わない。
+- `typespec/shared/model.tsp` defines **foundational concepts**. All services can `import` from it.
+- When service-specific extensions are needed, define extended models in `typespec/<service>/model.tsp` using `extends` or `...` (Spread).
+- **No shared C# class library (e.g., shared.models) is needed.** NSwag generates independent DTOs per service, so type sharing at the C# level is unnecessary.
 
 ```typespec
-// shared/model.tsp — 基盤の概念
+// shared/model.tsp — Foundational concepts
 model Player { id: int32; name: string; level: int32; }
 
-// game-server/model.tsp — サービス固有の拡張
+// game-server/model.tsp — Service-specific extension
 model GamePlayer extends Player { score: int64; lastLoginAt: offsetDateTime; }
 
-// admin/model.tsp — 別サービスの拡張
+// admin/model.tsp — Another service's extension
 model ManagedPlayer { ...Player; isBanned: boolean; }
 ```
 
 **Why no shared C# library?**
 
-1. **同じ概念でもサービスごとに API 契約は独立して進化する** — admin と game-server で公開フィールドが異なるのは自然。
-2. **二重管理の回避** — 共有 C# クラスを手書きすると、NSwag 生成 DTO との変換レイヤーが増え、メンテコストが上がる。
-3. **デプロイの独立性** — サービス A の変更で shared ライブラリが変わると、サービス B もリビルドが必要になる。
-4. **TypeSpec がスキーマレベルの single source of truth** — 概念の共有は TypeSpec で完結。C# は NSwag の自動生成に任せる。
+1. **API contracts evolve independently per service** — It is natural for admin and game-server to expose different fields for the same concept.
+2. **Avoid double management** — Hand-writing shared C# classes on top of NSwag-generated DTOs adds a mapping layer and increases maintenance cost.
+3. **Deploy independence** — If a shared library changes due to service A, service B must also be rebuilt.
+4. **TypeSpec is the schema-level single source of truth** — Concept sharing is handled entirely in TypeSpec. C# is left to NSwag auto-generation.
 
-### 孤立エンティティの自動クリーンアップ
+### Orphan Entity Auto-Cleanup
 
-`npm run tsp-and-nswag` の最後に `scripts/clean-orphan-entities.mjs` が実行される。  
-TypeSpec 側でモデルを削除した場合、対応する `*Entity.cs` が OpenAPI スキーマと照合され自動削除される。  
-ただし **`AppDbContext.cs` の `DbSet<T>` に登録されているエンティティは保護される**（DB 専用エンティティの誤削除を防ぐため）。
+`scripts/clean-orphan-entities.mjs` runs at the end of `npm run tsp-and-nswag`.  
+When a model is deleted in TypeSpec, the corresponding `*Entity.cs` is compared against the OpenAPI schema and automatically deleted.  
+However, **entities registered in `AppDbContext.cs` via `DbSet<T>` are protected** (to prevent accidental deletion of DB-only entities).
 
-### EF Core エンティティはサービスに閉じる
+### EF Core Entities Are Service-Local
 
-各サービスの `Data/` ディレクトリに `*Entity.cs` を配置する。  
-サービスが自分の DB スキーマに対して責任を持つ。
+Each service places `*Entity.cs` files in its own `Data/` directory.  
+Each service is responsible for its own DB schema.
 
 ## TypeSpec Structure
 
 ```
 typespec/
 ├── shared/
-│   └── model.tsp          # Error, Player など全サービス共通のモデル
+│   └── model.tsp          # Common models shared across all services (Error, Player, etc.)
 ├── admin/
-│   ├── main.tsp            # サービスエントリポイント
-│   ├── model.tsp           # AdminToolUser, ApprovalRequest など admin 固有
-│   ├── operations.tsp      # CRUD ルート定義
+│   ├── main.tsp            # Service entry point
+│   ├── model.tsp           # Admin-specific models (AdminToolUser, ApprovalRequest, etc.)
+│   ├── operations.tsp      # CRUD route definitions
 │   └── tspconfig.yaml      # output: openapi.admin.json
 ├── game-server/
 │   ├── main.tsp
-│   ├── model.tsp           # game-server 固有モデル
+│   ├── model.tsp           # Game-server-specific models
 │   ├── operations.tsp      # Players CRUD, Health
 │   └── tspconfig.yaml      # output: openapi.gameserver.json
 └── tsp-output/schema/
-    ├── openapi.admin.json       # 自動生成（編集禁止）
-    └── openapi.gameserver.json  # 自動生成（編集禁止）
+    ├── openapi.admin.json       # Auto-generated (do not edit)
+    └── openapi.gameserver.json  # Auto-generated (do not edit)
 ```
 
 ## Build & Run Commands
@@ -90,7 +90,7 @@ npm run tsp:compile          # TypeSpec → openapi.json (all services)
 npm run tsp:compile:admin    # admin only
 npm run tsp:compile:game-server  # game-server only
 npm run nswag:generate       # openapi.json → C# controllers (all services)
-npm run clean:orphan-entities    # 孤立 *Entity.cs の検出・削除
+npm run clean:orphan-entities    # Detect and delete orphan *Entity.cs files
 npm run build:backend        # dotnet build
 npm run build:frontend       # npm install + vite build (in admin.frontend/)
 
@@ -136,4 +136,6 @@ No test suite exists in this project.
 
 ## Language
 
-The README, code comments, and commit messages in this project are written in Japanese.
+- **Internal reasoning / thinking:** English
+- **User-facing output (responses, commit messages, code comments, PR descriptions):** User's input language (default: Japanese)
+- **This file (AGENTS.md):** English (optimized for AI agent comprehension)
