@@ -1,11 +1,11 @@
 import { OpenApiAdmin, ResourceGuesser } from "@api-platform/admin";
 import { CustomRoutes } from "react-admin";
 import { Route } from "react-router-dom";
-import { ApprovalRequestList } from "./approvalRequest/ApprovalRequestList";
-import { ApprovalRequestShow } from "./approvalRequest/ApprovalRequestShow";
-import { ApprovalRequestEdit } from "./approvalRequest/ApprovalRequestEdit";
-import { ApprovalRequestCreate } from "./approvalRequest/ApprovalRequestCreate";
-import { HelloWorld } from "./helloWorld/HelloWorld";
+import { ApprovalRequestList } from "./approval-request/ApprovalRequestList";
+import { ApprovalRequestShow } from "./approval-request/ApprovalRequestShow";
+import { ApprovalRequestEdit } from "./approval-request/ApprovalRequestEdit";
+import { ApprovalRequestCreate } from "./approval-request/ApprovalRequestCreate";
+import { HelloWorld } from "./hello-world/HelloWorld";
 import { CustomLayout } from "./layout/CustomLayout";
 
 export const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8080";
