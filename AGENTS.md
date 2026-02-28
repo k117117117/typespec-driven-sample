@@ -2,15 +2,79 @@
 
 ## Architecture
 
-This is a **TypeSpec-driven schema-first** admin tool. The data flow is:
+This is a **TypeSpec-driven schema-first** monorepo containing multiple backend services. The data flow is:
 
 ```
-typespec/*.tsp  →(tsp compile)→  openapi.json  →(NSwag)→  C# abstract controllers  →(manual)→  C# implementation controllers
-                                       ↓
-                            Frontend (react-admin) reads schema at runtime to auto-generate CRUD UI
+typespec/shared/model.tsp            ← Base models (cross-service concept definitions)
+typespec/<service>/model.tsp         ← Service-specific models (extendable via extends / Spread)
+typespec/<service>/operations.tsp    ← Route definitions
+         ↓ (tsp compile)
+typespec/tsp-output/schema/openapi.<service>.json
+         ↓ (NSwag)
+<service>/Generated/Controllers.g.cs ← Abstract controllers + DTOs
+         ↓ (manual)
+<service>/Controllers/               ← Implementation controllers
 ```
 
 **Key principle:** TypeSpec `.tsp` files are the single source of truth for the API contract. All downstream artifacts (OpenAPI spec, C# controllers, frontend UI) derive from them.
+
+## Design Principles
+
+### TypeSpec Model Sharing and Per-Service Independence
+
+- `typespec/shared/model.tsp` defines **foundational concepts**. All services can `import` from it.
+- When service-specific extensions are needed, define extended models in `typespec/<service>/model.tsp` using `extends` or `...` (Spread).
+- **No shared C# class library (e.g., shared.models) is needed.** NSwag generates independent DTOs per service, so type sharing at the C# level is unnecessary.
+
+```typespec
+// shared/model.tsp — Foundational concepts
+model Player { id: int32; name: string; level: int32; }
+
+// game-server/model.tsp — Service-specific extension
+model GamePlayer extends Player { score: int64; lastLoginAt: offsetDateTime; }
+
+// admin/model.tsp — Another service's extension
+model ManagedPlayer { ...Player; isBanned: boolean; }
+```
+
+**Why no shared C# library?**
+
+1. **API contracts evolve independently per service** — It is natural for admin and game-server to expose different fields for the same concept.
+2. **Avoid double management** — Hand-writing shared C# classes on top of NSwag-generated DTOs adds a mapping layer and increases maintenance cost.
+3. **Deploy independence** — If a shared library changes due to service A, service B must also be rebuilt.
+4. **TypeSpec is the schema-level single source of truth** — Concept sharing is handled entirely in TypeSpec. C# is left to NSwag auto-generation.
+
+### Orphan Entity Auto-Cleanup
+
+`scripts/clean-orphan-entities.mjs` runs at the end of `npm run tsp-and-nswag`.  
+When a model is deleted in TypeSpec, the corresponding `*Entity.cs` is compared against the OpenAPI schema and automatically deleted.  
+However, **entities registered in `AppDbContext.cs` via `DbSet<T>` are protected** (to prevent accidental deletion of DB-only entities).
+
+### EF Core Entities Are Service-Local
+
+Each service places `*Entity.cs` files in its own `Data/` directory.  
+Each service is responsible for its own DB schema.
+
+## TypeSpec Structure
+
+```
+typespec/
+├── shared/
+│   └── model.tsp          # Common models shared across all services (Error, Player, etc.)
+├── admin/
+│   ├── main.tsp            # Service entry point
+│   ├── model.tsp           # Admin-specific models (AdminToolUser, ApprovalRequest, etc.)
+│   ├── operations.tsp      # CRUD route definitions
+│   └── tspconfig.yaml      # output: openapi.admin.json
+├── game-server/
+│   ├── main.tsp
+│   ├── model.tsp           # Game-server-specific models
+│   ├── operations.tsp      # Players CRUD, Health
+│   └── tspconfig.yaml      # output: openapi.gameserver.json
+└── tsp-output/schema/
+    ├── openapi.admin.json       # Auto-generated (do not edit)
+    └── openapi.gameserver.json  # Auto-generated (do not edit)
+```
 
 ## Build & Run Commands
 
@@ -19,11 +83,14 @@ typespec/*.tsp  →(tsp compile)→  openapi.json  →(NSwag)→  C# abstract co
 docker compose up -d
 
 # Regenerate code after changing .tsp files
-npm run tsp-and-nswag       # TypeSpec compile + NSwag C# generation
+npm run tsp-and-nswag       # TypeSpec compile + NSwag C# generation + orphan cleanup
 
 # Individual steps
-npm run tsp:compile          # TypeSpec → openapi.json only
-npm run nswag:generate       # openapi.json → C# controllers only (requires .NET SDK)
+npm run tsp:compile          # TypeSpec → openapi.json (all services)
+npm run tsp:compile:admin    # admin only
+npm run tsp:compile:game-server  # game-server only
+npm run nswag:generate       # openapi.json → C# controllers (all services)
+npm run clean:orphan-entities    # Detect and delete orphan *Entity.cs files
 npm run build:backend        # dotnet build
 npm run build:frontend       # npm install + vite build (in admin.frontend/)
 
@@ -36,16 +103,16 @@ No test suite exists in this project.
 ## Code Generation Conventions
 
 ### Files you must NOT edit by hand
-- `admin.backend/Generated/Controllers.g.cs` — auto-generated by NSwag. Regenerate with `npm run nswag:generate`.
+- `*/Generated/Controllers.g.cs` — auto-generated by NSwag. Regenerate with `npm run nswag:generate`.
 - `typespec/tsp-output/` — auto-generated by TypeSpec compiler.
 
 ### Backend: Adding a new API resource
 
-1. Define the model in `typespec/model.tsp` using TypeSpec's `@visibility(Lifecycle.Read)` to mark read-only fields.
-2. Define CRUD routes in `typespec/routes.tsp` as a TypeSpec `interface` using `Read<T>`, `Create<T>`, `Update<T>` lifecycle wrappers.
-3. Run `npm run tsp-and-nswag` to regenerate `openapi.json` and `Controllers.g.cs`.
-4. Create a new controller in `admin.backend/Controllers/` that **inherits** the generated abstract controller (e.g., `FooController : FooControllerBaseControllerBase`).
-5. Add a corresponding EF Core entity and `DbSet` in `admin.backend/Data/AppDbContext.cs`. Enums use `HasConversion<string>()`.
+1. Define the model in `typespec/<service>/model.tsp` (or `shared/model.tsp` if shared). Use `@visibility(Lifecycle.Read)` to mark read-only fields.
+2. Define CRUD routes in `typespec/<service>/operations.tsp` as a TypeSpec `interface` using `Read<T>`, `Create<T>`, `Update<T>` lifecycle wrappers.
+3. Run `npm run tsp-and-nswag` to regenerate OpenAPI JSON, `Controllers.g.cs`, and clean up orphan entities.
+4. Create a new controller in `<service>/Controllers/` that **inherits** the generated abstract controller (e.g., `FooController : FooControllerBaseControllerBase`).
+5. Add a corresponding EF Core entity in `<service>/Data/` and register `DbSet` in `AppDbContext.cs`. Enums use `HasConversion<string>()`.
 6. Controllers use **primary constructor DI**: `public class FooController(AppDbContext db)`.
 7. Map between generated NSwag DTOs (e.g., `ReadFoo`, `CreateFoo`) and EF entities using private static helper methods (`ToReadDto`, `ToListItem`).
 
@@ -69,4 +136,6 @@ No test suite exists in this project.
 
 ## Language
 
-The README, code comments, and commit messages in this project are written in Japanese.
+- **Internal reasoning / thinking:** English
+- **User-facing output (responses, commit messages, code comments, PR descriptions):** User's input language (default: Japanese)
+- **This file (AGENTS.md):** English (optimized for AI agent comprehension)

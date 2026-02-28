@@ -1,7 +1,7 @@
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "Sample Game - 管理ツール",
+    "title": "Sample Game - Admin",
     "version": "0.0.0"
   },
   "tags": [
@@ -10,6 +10,9 @@
     },
     {
       "name": "ApprovalRequests"
+    },
+    {
+      "name": "Health"
     }
   ],
   "paths": {
@@ -36,7 +39,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Error"
+                  "$ref": "#/components/schemas/SampleGame.Error"
                 }
               }
             }
@@ -58,7 +61,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Error"
+                  "$ref": "#/components/schemas/SampleGame.Error"
                 }
               }
             }
@@ -109,7 +112,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Error"
+                  "$ref": "#/components/schemas/SampleGame.Error"
                 }
               }
             }
@@ -141,7 +144,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Error"
+                  "$ref": "#/components/schemas/SampleGame.Error"
                 }
               }
             }
@@ -183,7 +186,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Error"
+                  "$ref": "#/components/schemas/SampleGame.Error"
                 }
               }
             }
@@ -217,7 +220,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Error"
+                  "$ref": "#/components/schemas/SampleGame.Error"
                 }
               }
             }
@@ -239,7 +242,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Error"
+                  "$ref": "#/components/schemas/SampleGame.Error"
                 }
               }
             }
@@ -290,7 +293,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Error"
+                  "$ref": "#/components/schemas/SampleGame.Error"
                 }
               }
             }
@@ -322,7 +325,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Error"
+                  "$ref": "#/components/schemas/SampleGame.Error"
                 }
               }
             }
@@ -364,7 +367,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Error"
+                  "$ref": "#/components/schemas/SampleGame.Error"
                 }
               }
             }
@@ -398,7 +401,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Error"
+                  "$ref": "#/components/schemas/SampleGame.Error"
                 }
               }
             }
@@ -432,7 +435,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Error"
+                  "$ref": "#/components/schemas/SampleGame.Error"
                 }
               }
             }
@@ -442,77 +445,42 @@
           "ApprovalRequests"
         ]
       }
+    },
+    "/healthz": {
+      "get": {
+        "operationId": "Health_check",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "The request has succeeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "healthy"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "status"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Health"
+        ]
+      }
     }
   },
   "components": {
     "schemas": {
-      "AdminToolUser": {
-        "type": "object",
-        "required": [
-          "id",
-          "name",
-          "email",
-          "role"
-        ],
-        "properties": {
-          "id": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "name": {
-            "type": "string"
-          },
-          "email": {
-            "type": "string"
-          },
-          "role": {
-            "type": "string",
-            "enum": [
-              "admin",
-              "staff"
-            ]
-          }
-        }
-      },
-      "ApprovalRequest": {
-        "type": "object",
-        "required": [
-          "id",
-          "reason",
-          "status",
-          "createdAt",
-          "updatedAt"
-        ],
-        "properties": {
-          "id": {
-            "type": "integer",
-            "format": "int32",
-            "readOnly": true
-          },
-          "reason": {
-            "type": "string"
-          },
-          "status": {
-            "type": "string",
-            "enum": [
-              "pending",
-              "approved",
-              "rejected"
-            ],
-            "readOnly": true
-          },
-          "createdAt": {
-            "type": "string",
-            "format": "date-time",
-            "readOnly": true
-          },
-          "updatedAt": {
-            "type": "string",
-            "format": "date-time",
-            "readOnly": true
-          }
-        }
-      },
       "CreateAdminToolUser": {
         "type": "object",
         "required": [
@@ -553,22 +521,6 @@
           }
         },
         "description": ""
-      },
-      "Error": {
-        "type": "object",
-        "required": [
-          "code",
-          "message"
-        ],
-        "properties": {
-          "code": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "message": {
-            "type": "string"
-          }
-        }
       },
       "ReadAdminToolUser": {
         "type": "object",
@@ -699,6 +651,22 @@
           }
         },
         "description": ""
+      },
+      "SampleGame.Error": {
+        "type": "object",
+        "required": [
+          "code",
+          "message"
+        ],
+        "properties": {
+          "code": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "message": {
+            "type": "string"
+          }
+        }
       },
       "UpdateAdminToolUser": {
         "type": "object",

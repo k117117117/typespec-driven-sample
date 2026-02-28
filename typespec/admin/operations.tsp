@@ -1,8 +1,11 @@
 import "@typespec/http";
+import "../shared/model.tsp";
+import "./model.tsp";
 
 using Http;
+using SampleGame;
 
-namespace BroGameAdmin;
+namespace SampleGame.Admin;
 
 @route("/admin-tool-users")
 @tag("AdminToolUsers")
@@ -25,4 +28,10 @@ interface ApprovalRequests {
 
   @route("{id}/approve") @post approve(@path id: int32): OkResponse | Error;
   @route("{id}/reject") @post reject(@path id: int32): OkResponse | Error;
+}
+
+@route("/healthz")
+@tag("Health")
+interface Health {
+  @get check(): { status: "healthy" };
 }

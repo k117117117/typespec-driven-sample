@@ -4,12 +4,12 @@ WORKDIR /src
 
 # csproj のみ先にコピーして依存関係をリストア
 # (ソースコードはボリュームマウントで提供)
-COPY admin.backend/Backend.csproj ./admin.backend/
-RUN dotnet restore ./admin.backend/Backend.csproj
+COPY game.server/GameServer.csproj ./game.server/
+RUN dotnet restore ./game.server/GameServer.csproj
 
-WORKDIR /src/admin.backend
+WORKDIR /src/game.server
 
-EXPOSE 5000
+EXPOSE 5001
 
 # dotnet watch で変更検知 → 自動リビルド＆リスタート
 ENTRYPOINT ["dotnet", "watch", "run", "--non-interactive", "--no-launch-profile"]
