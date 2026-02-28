@@ -3,6 +3,7 @@ FROM mcr.microsoft.com/dotnet/sdk:9.0
 WORKDIR /src
 
 # csproj のみ先にコピーして依存関係をリストア
+# (ソースコードはボリュームマウントで提供)
 COPY game.server/GameServer.csproj ./game.server/
 RUN dotnet restore ./game.server/GameServer.csproj
 
