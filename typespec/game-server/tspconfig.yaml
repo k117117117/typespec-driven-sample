@@ -3,6 +3,7 @@ emit:
 options:
   "@typespec/openapi3":
     file-type: "json"
-    emitter-output-dir: "{output-dir}/schema"
+    output-file: "openapi.gameserver.json"
+    emitter-output-dir: "{project-root}/../tsp-output/schema"
     openapi-versions:
       - 3.1.0

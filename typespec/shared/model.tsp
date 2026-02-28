@@ -2,7 +2,7 @@ import "@typespec/http";
 
 using Http;
 
-namespace BroGameAdmin;
+namespace SampleGame;
 
 model AdminToolUser {
   id: int32;
