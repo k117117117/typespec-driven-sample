@@ -139,3 +139,9 @@ No test suite exists in this project.
 - **Internal reasoning / thinking:** English
 - **User-facing output (responses, commit messages, code comments, PR descriptions):** User's input language (default: Japanese)
 - **This file (AGENTS.md):** English (optimized for AI agent comprehension)
+
+## File Formatting
+
+- All created or edited files **must end with a newline** (final EOL before EOF).
+- `*/Generated/` files are auto-generated — do not modify them, including EOF newline fixes.
+

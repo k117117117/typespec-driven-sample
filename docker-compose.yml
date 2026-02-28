@@ -43,7 +43,7 @@ services:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://+:5000
       - DOTNET_USE_POLLING_FILE_WATCHER=true
-      - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=admin;Username=admin;Password=admin
+      - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=admin;Username=postgres;Password=postgres
     ports:
       - "5000:5000"
     depends_on:
@@ -76,8 +76,12 @@ services:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://+:5001
       - DOTNET_USE_POLLING_FILE_WATCHER=true
+      - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=gameserver;Username=postgres;Password=postgres
     ports:
       - "5001:5001"
+    depends_on:
+      postgres:
+        condition: service_healthy
 
   game-server-nginx:
     image: nginx:alpine
@@ -90,19 +94,22 @@ services:
 
   # ===========================================
   # PostgreSQL
+  # Root ユーザーのみここで定義。
+  # アプリケーション用 DB (gameserver, admin) は
+  # scripts/init-db.sh で作成される。
   # ===========================================
   postgres:
     image: postgres:17-alpine
     environment:
-      - POSTGRES_USER=admin
-      - POSTGRES_PASSWORD=admin
-      - POSTGRES_DB=admin
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
     ports:
       - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
+      - ./scripts/init-db.sh:/docker-entrypoint-initdb.d/init-db.sh:ro
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U admin"]
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 5s
       timeout: 5s
       retries: 5

@@ -1,8 +1,14 @@
+using GameServer.Data;
+using Microsoft.EntityFrameworkCore;
 using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
+
+builder.Services.AddDbContext<AppDbContext>(options =>
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")
+        ?? "Host=localhost;Port=5432;Database=gameserver;Username=postgres;Password=postgres"));
 
 builder.Services.AddCors(options =>
 {
@@ -18,6 +24,14 @@ builder.Services.AddCors(options =>
 });
 
 var app = builder.Build();
+
+// Auto-create database (development only; use Migrations in production)
+if (app.Environment.IsDevelopment())
+{
+    using var scope = app.Services.CreateScope();
+    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    db.Database.EnsureCreated();
+}
 
 app.UseCors();
 
