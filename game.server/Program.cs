@@ -32,7 +32,7 @@ if (app.Environment.IsDevelopment())
     app.MapGet("/openapi.json", async () =>
     {
         // TypeSpec から生成された OpenAPI スキーマ (docker-compose でマウント)
-        var path = Path.Combine(app.Environment.ContentRootPath, "schema", "openapi.gameserver.json");
+        var path = Path.Combine(app.Environment.ContentRootPath, "openapi-schema", "openapi.gameserver.json");
         if (!File.Exists(path))
             return Results.NotFound("openapi.json not found. Run 'npm run tsp-and-nswag' to generate it.");
 

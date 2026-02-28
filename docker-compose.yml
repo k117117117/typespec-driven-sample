@@ -35,7 +35,7 @@ services:
       dockerfile: admin.backend/Dockerfile
     volumes:
       - ./admin.backend:/src/admin.backend
-      - ./typespec/tsp-output/schema:/src/admin.backend/schema:ro
+      - ./typespec/tsp-output/schema:/src/admin.backend/openapi-schema:ro
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://+:5000
@@ -65,7 +65,7 @@ services:
       dockerfile: game.server/Dockerfile
     volumes:
       - ./game.server:/src/game.server
-      - ./typespec/tsp-output/schema:/src/game.server/schema:ro
+      - ./typespec/tsp-output/schema:/src/game.server/openapi-schema:ro
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://+:5001
