@@ -1,7 +1,7 @@
 using Backend.Generated;
 using Microsoft.AspNetCore.Mvc;
 
-namespace Backend.Controllers;
+namespace Backend.Health;
 
 /// <summary>
 /// Health API の実装。NSwag が生成した抽象コントローラーを継承。

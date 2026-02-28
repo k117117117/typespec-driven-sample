@@ -1,4 +1,4 @@
-namespace Backend.Data;
+namespace Backend.AdminToolUsers;
 
 /// <summary>
 /// 管理ツールユーザーのエンティティ。

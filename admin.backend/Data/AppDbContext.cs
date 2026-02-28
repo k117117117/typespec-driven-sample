@@ -1,3 +1,5 @@
+using Backend.AdminToolUsers;
+using Backend.ApprovalRequests;
 using Microsoft.EntityFrameworkCore;
 
 namespace Backend.Data;

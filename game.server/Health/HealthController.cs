@@ -1,7 +1,7 @@
 using GameServer.Generated;
 using Microsoft.AspNetCore.Mvc;
 
-namespace GameServer.Controllers;
+namespace GameServer.Health;
 
 /// <summary>
 /// Health API の実装。NSwag が生成した抽象コントローラーを継承。

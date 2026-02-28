@@ -3,7 +3,7 @@ using Backend.Generated;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
-namespace Backend.Controllers;
+namespace Backend.ApprovalRequests;
 
 /// <summary>
 /// ApprovalRequests API の実装。NSwag が生成した抽象コントローラーを継承。

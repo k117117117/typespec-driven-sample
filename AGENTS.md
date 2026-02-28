@@ -111,15 +111,15 @@ No test suite exists in this project.
 1. Define the model in `typespec/<service>/model.tsp` (or `shared/model.tsp` if shared). Use `@visibility(Lifecycle.Read)` to mark read-only fields.
 2. Define CRUD routes in `typespec/<service>/operations.tsp` as a TypeSpec `interface` using `Read<T>`, `Create<T>`, `Update<T>` lifecycle wrappers.
 3. Run `npm run tsp-and-nswag` to regenerate OpenAPI JSON, `Controllers.g.cs`, and clean up orphan entities.
-4. Create a new controller in `<service>/Controllers/` that **inherits** the generated abstract controller (e.g., `FooController : FooControllerBaseControllerBase`).
-5. Add a corresponding EF Core entity in `<service>/Data/` and register `DbSet` in `AppDbContext.cs`. Enums use `HasConversion<string>()`.
+4. Create a domain folder `<service>/<ResourceName>/` (PascalCase) containing both the controller and entity (e.g., `admin.backend/Foos/FoosController.cs` + `FooEntity.cs`). The controller **inherits** the generated abstract controller (e.g., `FooController : FooControllerBaseControllerBase`).
+5. Add a corresponding EF Core entity in the same domain folder and register `DbSet` in `<service>/Data/AppDbContext.cs`. Enums use `HasConversion<string>()`.
 6. Controllers use **primary constructor DI**: `public class FooController(AppDbContext db)`.
 7. Map between generated NSwag DTOs (e.g., `ReadFoo`, `CreateFoo`) and EF entities using private static helper methods (`ToReadDto`, `ToListItem`).
 
 ### Frontend: Adding UI for a resource
 
 - For auto-generated CRUD UI, just add `<ResourceGuesser name="resource-name" />` in `App.tsx`.
-- For custom UI, create components in `admin.frontend/src/<resourceName>/` and pass them as props to `ResourceGuesser` (`list`, `show`, `create`, `edit`).
+- For custom UI, create components in `admin.frontend/src/<resource-name>/` (kebab-case) and pass them as props to `ResourceGuesser` (`list`, `show`, `create`, `edit`).
 - Use `FieldGuesser`/`InputGuesser` from `@api-platform/admin` for fields; they auto-detect types from the OpenAPI schema.
 - Non-CRUD actions (like approve/reject) call the API directly with `fetch()` using the `API_URL` export from `App.tsx`.
 - Custom routes (non-API pages) use react-admin's `<CustomRoutes>` and must be manually added to the menu in `layout/CustomMenu`.

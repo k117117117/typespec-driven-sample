@@ -1,4 +1,4 @@
-namespace Backend.Data;
+namespace Backend.ApprovalRequests;
 
 /// <summary>
 /// 承認リクエストのエンティティ。
