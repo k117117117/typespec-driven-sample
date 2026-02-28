@@ -7,4 +7,5 @@ RUN npm install
 
 COPY . .
 
-ENTRYPOINT ["npx", "tsp", "compile", "."]
+# admin と game-server の両方をコンパイル（出力先は tspconfig.yaml で指定）
+ENTRYPOINT ["sh", "-c", "npx tsp compile admin/ && npx tsp compile game-server/"]

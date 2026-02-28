@@ -1,8 +1,6 @@
-import "@typespec/http";
+namespace SampleGame;
 
-using Http;
-
-namespace BroGameAdmin;
+// adminに固有のモデルを定義
 
 model AdminToolUser {
   id: int32;
@@ -28,10 +26,4 @@ model ApprovalRequest {
 
   @visibility(Lifecycle.Read)
   updatedAt: offsetDateTime;
-}
-
-@error
-model Error {
-  code: int32;
-  message: string;
 }
