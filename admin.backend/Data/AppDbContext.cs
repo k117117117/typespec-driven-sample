@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using SharedModels;
 
 namespace Backend.Data;
 
@@ -23,34 +24,4 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             entity.Property(e => e.Role).HasConversion<string>();
         });
     }
-}
-
-public class ApprovalRequestEntity
-{
-    public int Id { get; set; }
-    public string Reason { get; set; } = string.Empty;
-    public ApprovalStatusValue Status { get; set; } = ApprovalStatusValue.Pending;
-    public DateTimeOffset CreatedAt { get; set; }
-    public DateTimeOffset UpdatedAt { get; set; }
-}
-
-public enum ApprovalStatusValue
-{
-    Pending,
-    Approved,
-    Rejected
-}
-
-public class AdminToolUserEntity
-{
-    public int Id { get; set; }
-    public string Name { get; set; } = string.Empty;
-    public string Email { get; set; } = string.Empty;
-    public AdminToolUserRoleValue Role { get; set; } = AdminToolUserRoleValue.Staff;
-}
-
-public enum AdminToolUserRoleValue
-{
-    Admin,
-    Staff
 }

@@ -1,11 +1,14 @@
 FROM mcr.microsoft.com/dotnet/sdk:9.0
 
-WORKDIR /app
+WORKDIR /src
 
 # csproj のみ先にコピーして依存関係をリストア
 # (ソースコードはボリュームマウントで提供)
-COPY admin.backend/*.csproj ./
-RUN dotnet restore
+COPY admin.backend/Backend.csproj ./admin.backend/
+COPY shared.models/SharedModels.csproj ./shared.models/
+RUN dotnet restore ./admin.backend/Backend.csproj
+
+WORKDIR /src/admin.backend
 
 EXPOSE 5000
 

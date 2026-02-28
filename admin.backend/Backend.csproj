@@ -8,6 +8,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\shared.models\SharedModels.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="NSwag.MSBuild" Version="14.*">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -20,9 +24,9 @@
     <PackageReference Include="Scalar.AspNetCore" Version="2.12.48" />
   </ItemGroup>
 
-  <Target Name="NSwag" BeforeTargets="PrepareForBuild" Condition="'$(SkipNSwag)' != 'true' And Exists('..\typespec\tsp-output\schema\openapi.json')">
+  <Target Name="NSwag" BeforeTargets="PrepareForBuild" Condition="'$(SkipNSwag)' != 'true' And Exists('..\typespec\tsp-output\schema\openapi.admin.json')">
     <MakeDir Directories="Generated" Condition="!Exists('Generated')" />
-    <Exec Command="$(NSwagExe) openapi2cscontroller /input:..\typespec\tsp-output\schema\openapi.json /classname:{controller}ControllerBase /namespace:Backend.Generated /controllerStyle:Abstract /controllerTarget:AspNetCore /useCancellationToken:true /useActionResultType:true /generateModelValidationAttributes:true /jsonLibrary:SystemTextJson /output:Generated\Controllers.g.cs" />
+    <Exec Command="$(NSwagExe) openapi2cscontroller /input:..\typespec\tsp-output\schema\openapi.admin.json /classname:{controller}ControllerBase /namespace:Backend.Generated /controllerStyle:Abstract /controllerTarget:AspNetCore /useCancellationToken:true /useActionResultType:true /generateModelValidationAttributes:true /jsonLibrary:SystemTextJson /output:Generated\Controllers.g.cs" />
   </Target>
 
 </Project>

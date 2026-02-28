@@ -2,6 +2,7 @@ using Backend.Data;
 using Backend.Generated;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using SharedModels;
 
 namespace Backend.Controllers;
 
