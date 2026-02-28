@@ -95,6 +95,9 @@ shared/model.tsp に定義しただけでは、そのモデルを操作で使っ
 
 TypeSpec 側でモデルを削除 → OpenAPI からスキーマが消える → 対応する `*Entity.cs` が孤立として検出・自動削除される。
 
+ただし **`AppDbContext.cs` の `DbSet<T>` に登録されているエンティティは保護される**。
+API に露出しないが DB には必要なエンティティ（監査ログ、セッション等）が誤削除されるのを防ぐため。
+
 手動で `npm run clean:orphan-entities` でも実行可能。
 
 ## 新しいリソースを追加する手順

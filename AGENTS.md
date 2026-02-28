@@ -47,7 +47,8 @@ model ManagedPlayer { ...Player; isBanned: boolean; }
 ### 孤立エンティティの自動クリーンアップ
 
 `npm run tsp-and-nswag` の最後に `scripts/clean-orphan-entities.mjs` が実行される。  
-TypeSpec 側でモデルを削除した場合、対応する `*Entity.cs` が OpenAPI スキーマと照合され自動削除される。
+TypeSpec 側でモデルを削除した場合、対応する `*Entity.cs` が OpenAPI スキーマと照合され自動削除される。  
+ただし **`AppDbContext.cs` の `DbSet<T>` に登録されているエンティティは保護される**（DB 専用エンティティの誤削除を防ぐため）。
 
 ### EF Core エンティティはサービスに閉じる
 
