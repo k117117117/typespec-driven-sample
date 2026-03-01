@@ -1,8 +1,10 @@
 using AdminBackend.Domain.AdminToolUsers.Repositories;
 using AdminBackend.Domain.ApprovalRequests.Repositories;
+using AdminBackend.Domain.Players.Services;
 using AdminBackend.Infrastructure.AdminToolUsers;
 using AdminBackend.Infrastructure.ApprovalRequests;
 using AdminBackend.Infrastructure.Data;
+using AdminBackend.Infrastructure.Players;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -13,13 +15,18 @@ namespace AdminBackend.Infrastructure;
 /// </summary>
 public static class DependencyInjection
 {
-    public static IServiceCollection AddInfrastructure(this IServiceCollection services, string connectionString)
+    public static IServiceCollection AddInfrastructure(this IServiceCollection services, string connectionString, string gameServerBaseUrl)
     {
         services.AddDbContext<AppDbContext>(options =>
             options.UseNpgsql(connectionString));
 
         services.AddScoped<IAdminToolUserRepository, AdminToolUserRepository>();
         services.AddScoped<IApprovalRequestRepository, ApprovalRequestRepository>();
+
+        services.AddHttpClient<IGameServerPlayerClient, GameServerPlayerClient>(client =>
+        {
+            client.BaseAddress = new Uri(gameServerBaseUrl);
+        });
 
         return services;
     }

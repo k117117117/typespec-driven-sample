@@ -1,5 +1,6 @@
 using AdminBackend.Application.AdminToolUsers;
 using AdminBackend.Application.ApprovalRequests;
+using AdminBackend.Application.Players;
 using AdminBackend.Infrastructure;
 using Scalar.AspNetCore;
 
@@ -8,9 +9,12 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 builder.Services.AddScoped<AdminToolUserApplicationService>();
 builder.Services.AddScoped<ApprovalRequestApplicationService>();
+builder.Services.AddScoped<PlayerQueryApplicationService>();
 builder.Services.AddInfrastructure(
     builder.Configuration.GetConnectionString("DefaultConnection")
-        ?? "Host=localhost;Port=5432;Database=admin;Username=postgres;Password=postgres");
+        ?? "Host=localhost;Port=5432;Database=admin;Username=postgres;Password=postgres",
+    builder.Configuration["GameServer:BaseUrl"]
+        ?? "http://localhost:5001");
 
 builder.Services.AddCors(options =>
 {

@@ -48,11 +48,14 @@ services:
       - ASPNETCORE_URLS=http://+:5000
       - DOTNET_USE_POLLING_FILE_WATCHER=true
       - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=admin;Username=postgres;Password=postgres
+      - GameServer__BaseUrl=http://game-server-backend:5001
     ports:
       - "5000:5000"
     depends_on:
       postgres:
         condition: service_healthy
+      game-server-backend:
+        condition: service_started
 
   admin-backend-nginx:
     image: nginx:alpine
