@@ -51,7 +51,7 @@ admin.frontend/AGENTS.md     ← ファイル構成、UI 追加手順、apiClien
 ### `admin.frontend/AGENTS.md`
 
 - `src/` のファイル構成
-- CRUD UI の追加方法（`ResourceGuesser` + `resources.ts`）
+- CRUD UI の追加方法（`tsp:compile` で `resources.g.ts` が自動生成 → `App.tsx` が動的レンダリング）
 - カスタム UI の作成手順
 - `apiClient`（openapi-fetch）による非 CRUD アクション
 - カスタムルート（非 API ページ）の追加方法

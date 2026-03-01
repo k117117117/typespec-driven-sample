@@ -48,7 +48,7 @@ model ManagedPlayer { ...Player; isBanned: boolean; }
 
 1. Define the model in `<service>/model.tsp` (or `shared/model.tsp` if shared). Use `@visibility(Lifecycle.Read)` for read-only fields.
 2. Define CRUD routes in `<service>/operations.tsp` as a TypeSpec `interface` using `Read<T>`, `Create<T>`, `Update<T>` lifecycle wrappers.
-3. Run `npm run tsp-and-nswag` to regenerate OpenAPI JSON, `Controllers.g.cs`, and clean up orphan entities.
+3. Run `npm run tsp-and-nswag` to regenerate OpenAPI JSON, TypeScript types, `Controllers.g.cs`, and clean up orphan entities.
 
 Then proceed to the C# side — see the relevant service's AGENTS.md (`admin.backend/` or `game.server/`).
 

@@ -8,16 +8,17 @@ npm run up:build        # docker compose up -d --build
 npm run down            # docker compose down
 npm run down:clean      # docker compose down -v (ボリュームも削除)
 
-npm run tsp-and-nswag   # TypeSpec コンパイル + NSwag コード生成 + 孤立エンティティ削除 (セット)
-npm run tsp:compile     # TypeSpec コンパイルのみ
+npm run tsp-and-nswag   # TypeSpec コンパイル + TS 型生成 + リソース定数生成 + NSwag コード生成 + 孤立エンティティ削除 (セット)
+npm run tsp:compile     # TypeSpec コンパイル + TS 型生成 + リソース定数生成
 npm run nswag:generate  # NSwag コード生成のみ
 npm run clean:orphan-entities  # 孤立 *Entity.cs の検出・削除
+npm run generate:resources     # OpenAPI → CRUD リソース名定数生成 (admin.frontend)
 
 npm run build:backend   # バックエンドビルド
 npm run build:frontend  # フロントエンドビルド
 npm run build:all       # 全ビルド (tsp+nswag → backend → frontend)
 
-npm run openapi:generate:ts  # OpenAPI → TypeScript 型定義生成 (admin.frontend)
+npm run openapi:generate:ts  # OpenAPI → TypeScript 型定義生成 (admin.frontend, tsp:compile に含まれるため通常は単体実行不要)
 ```
 
 ## TypeSpec スキーマ (.tsp) を修正した場合
@@ -26,7 +27,7 @@ npm run openapi:generate:ts  # OpenAPI → TypeScript 型定義生成 (admin.fro
 npm run tsp-and-nswag
 ```
 
-TypeSpec コンパイル → NSwag コード生成が実行され、生成された C# コントローラーは `dotnet watch` が自動検知して反映します。
+TypeSpec コンパイル → TypeScript 型定義生成 → CRUD リソース名定数生成 + NSwag コード生成が実行され、生成された C# コントローラーは `dotnet watch` が自動検知して反映します。フロントエンドも `generated/resources.g.ts` が更新されるため、新しいリソースは `App.tsx` に自動的に反映されます。
 
 NSwag が `Presentation/Generated/Controllers.g.cs` に抽象コントローラーと DTO クラスを自動生成するので、以下の順序で実装を追加・更新してください:
 

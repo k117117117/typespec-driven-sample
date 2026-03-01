@@ -23,6 +23,14 @@ const ja: TranslationMessages = {
         reason: "理由",
       },
     },
+    "players": {
+      name: "プレイヤー",
+      fields: {
+        id: "ID",
+        name: "名前",
+        level: "レベル",
+      },
+    },
   },
 };
 

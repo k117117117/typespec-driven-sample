@@ -11,8 +11,20 @@ import { HelloWorld } from "./hello-world/HelloWorld";
 import { CustomLayout } from "./layout";
 import { i18nProvider } from "./i18n";
 import { API_URL, SCHEMA_URL } from "./config";
-import { resources } from "./resources";
+import { resources } from "./generated/resources.g";
 import { routes } from "./routes";
+
+// カスタムコンポーネントを使用するリソースのオーバーライド定義
+const customResources: Partial<
+  Record<string, { list?: React.ComponentType; show?: React.ComponentType; create?: React.ComponentType; edit?: React.ComponentType }>
+> = {
+  "approval-requests": {
+    list: ApprovalRequestList,
+    show: ApprovalRequestShow,
+    create: ApprovalRequestCreate,
+    edit: ApprovalRequestEdit,
+  },
+};
 
 const App = () => (
   <OpenApiAdmin
@@ -21,19 +33,11 @@ const App = () => (
     layout={CustomLayout}
     i18nProvider={i18nProvider}
   >
-    {/* CRUDに対応したページ(Reactコンポーネント)を明示的に指定しない場合は自動生成される */}
-    <ResourceGuesser name={resources.adminToolUsers} />
+    {Object.values(resources).map((name) => (
+      <ResourceGuesser key={name} name={name} {...customResources[name]} />
+    ))}
 
-    {/* CRUDに対応したページ(Reactコンポーネント)を明示的に指定 */}
-    <ResourceGuesser
-      name={resources.approvalRequests}
-      list={ApprovalRequestList}
-      show={ApprovalRequestShow}
-      create={ApprovalRequestCreate}
-      edit={ApprovalRequestEdit}
-    />
-
-    {/* OpenAPI仕様に対応しない独自のルートも追加することができる */}
+    {/* OpenAPI仕様に対応しない独自のルートを追加する例 */}
     <CustomRoutes>
       {/* カスタムルートは自動的にはMenuに追加されないので以下の方法で追加する必要がある */}
       {/* https://marmelab.com/react-admin/CustomRoutes.html#adding-custom-routes-to-the-menu */}

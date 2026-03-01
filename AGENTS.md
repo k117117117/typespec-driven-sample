@@ -1,5 +1,7 @@
 # AGENTS
 
+> `CLAUDE.md` and `.github/copilot-instructions.md` are symbolic links to this file.
+
 ## Output Efficiency
 
 - **Do not narrate steps.** Do not explain what you are about to do or just did. Summarize results once at the end.
@@ -17,6 +19,10 @@ typespec/<service>/model.tsp         ← Service-specific models (extends / Spre
 typespec/<service>/operations.tsp    ← Route definitions
          ↓ (tsp compile)
 typespec/tsp-output/schema/openapi.<service>.json
+         ↓ (tsp compile, openapi-typescript)
+admin.frontend/src/generated/admin.d.ts      ← TypeScript types
+         ↓ (tsp compile, generate-resources)
+admin.frontend/src/generated/resources.g.ts  ← CRUD resource name constants
          ↓ (NSwag)
 <service>/Presentation/Generated/Controllers.g.cs ← Abstract controllers + DTOs
          ↓ (manual)
@@ -37,15 +43,16 @@ typespec/tsp-output/schema/openapi.<service>.json
 
 ```bash
 docker compose up -d                         # Start everything (Docker required)
-npm run tsp-and-nswag                        # TypeSpec compile + NSwag + orphan cleanup
-npm run tsp:compile                          # TypeSpec → openapi.json (all services)
-npm run tsp:compile:admin                    # admin only
+npm run tsp-and-nswag                        # TypeSpec compile + TS types + resources + NSwag + orphan cleanup
+npm run tsp:compile                          # TypeSpec → openapi.json + TypeScript types + resources.g.ts (all services)
+npm run tsp:compile:admin                    # admin only (OpenAPI + TS types + resources)
 npm run tsp:compile:game-server              # game-server only
 npm run nswag:generate                       # openapi.json → C# controllers (all)
 npm run clean:orphan-entities                # Detect/delete orphan *Entity.cs files
+npm run generate:resources                   # openapi.json → resources.g.ts (admin.frontend/)
 npm run build:backend                        # dotnet build
 npm run build:frontend                       # npm install + vite build (admin.frontend/)
-npm run openapi:generate:ts                  # openapi.json → TypeScript types (admin.frontend/)
+npm run openapi:generate:ts                  # openapi.json → TypeScript types (admin.frontend/, standalone)
 npm run down:clean && npm run up:build       # Clean restart (rebuild images, reset DB)
 ```
 
@@ -55,7 +62,7 @@ No test suite exists in this project.
 
 - `*/Presentation/Generated/Controllers.g.cs` — NSwag auto-generated. Regenerate: `npm run nswag:generate`
 - `typespec/tsp-output/` — TypeSpec compiler output. Regenerate: `npm run tsp:compile`
-- `admin.frontend/src/generated/` — openapi-typescript output. Regenerate: `npm run openapi:generate:ts`
+- `admin.frontend/src/generated/` — openapi-typescript / generate-resources output. Regenerate: `npm run tsp:compile`
 
 ## Tech Stack
 

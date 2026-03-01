@@ -12,12 +12,16 @@ npm run openapi:generate:ts    # → admin.frontend/src/generated/admin.d.ts
 
 `src/types/resource.ts` で生成型の `paths` キーから `ResourceName` ユニオン型を導出しています。`ResourceGuesser` の `name` に存在しないリソース名を指定するとコンパイルエラーになります。
 
+`scripts/generate-resources.mjs` が OpenAPI の paths から CRUD リソース（`/{path}` と `/{path}/{id}` の両方を持つパス）を検出し、`generated/resources.g.ts` にリソース名定数を自動生成します。`App.tsx` はこの定数を動的に参照するため、TypeSpec にリソースを追加すれば `tsp:compile` 後に自動的に UI に反映されます。
+
 ```typescript
-// resources.ts — OpenAPI スキーマと不一致ならコンパイルエラー
+// generated/resources.g.ts — scripts/generate-resources.mjs により自動生成
+import type { ResourceName } from "../types/resource";
+
 export const resources = {
   adminToolUsers: "admin-tool-users" as const satisfies ResourceName,
   approvalRequests: "approval-requests" as const satisfies ResourceName,
-};
+} as const;
 ```
 
 ## API 呼び出しの型安全性
