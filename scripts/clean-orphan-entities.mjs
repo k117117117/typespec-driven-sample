@@ -11,7 +11,7 @@
  *
  * Usage: node scripts/clean-orphan-entities.mjs
  */
-import { readFileSync, readdirSync, unlinkSync, existsSync } from "fs";
+import { readFileSync, readdirSync, unlinkSync, existsSync, statSync } from "fs";
 import { join } from "path";
 
 /** 各バックエンドの OpenAPI JSON パス、エンティティ格納ディレクトリ、DbContext パスの対応 */
@@ -19,14 +19,14 @@ const configs = [
   {
     name: "admin.backend",
     openapi: "typespec/tsp-output/schema/openapi.admin.json",
-    entitiesDir: "admin.backend/Data",
-    dbContext: "admin.backend/Data/AppDbContext.cs",
+    entitiesDir: "admin.backend/Infrastructure",
+    dbContext: "admin.backend/Infrastructure/Data/AppDbContext.cs",
   },
   {
     name: "game.server",
     openapi: "typespec/tsp-output/schema/openapi.gameserver.json",
-    entitiesDir: "game.server/Data",
-    dbContext: "game.server/Data/AppDbContext.cs",
+    entitiesDir: "game.server/Infrastructure",
+    dbContext: "game.server/Infrastructure/Data/AppDbContext.cs",
   },
 ];
 
@@ -44,6 +44,22 @@ function extractDbSetEntities(dbContextPath) {
     names.add(match[1]);
   }
   return names;
+}
+
+/**
+ * ディレクトリを再帰的にスキャンし、*Entity.cs ファイルを収集する。
+ */
+function findEntityFiles(dir, result = []) {
+  if (!existsSync(dir)) return result;
+  for (const entry of readdirSync(dir)) {
+    const full = join(dir, entry);
+    if (statSync(full).isDirectory()) {
+      findEntityFiles(full, result);
+    } else if (entry.endsWith("Entity.cs")) {
+      result.push({ file: entry, fullPath: full });
+    }
+  }
+  return result;
 }
 
 let removedCount = 0;
@@ -76,12 +92,11 @@ for (const { name, openapi, entitiesDir, dbContext } of configs) {
   // AppDbContext の DbSet に登録されているエンティティは削除対象外
   const dbSetEntities = extractDbSetEntities(dbContext);
 
-  // *Entity.cs ファイルをスキャンし、OpenAPI にも DbSet にも存在しなければ削除
-  const files = readdirSync(entitiesDir).filter((f) => f.endsWith("Entity.cs"));
-  for (const file of files) {
+  // *Entity.cs ファイルを再帰的にスキャンし、OpenAPI にも DbSet にも存在しなければ削除
+  const entityFiles = findEntityFiles(entitiesDir);
+  for (const { file, fullPath } of entityFiles) {
     const baseName = file.replace(/Entity\.cs$/, "");
     if (!modelNames.has(baseName) && !dbSetEntities.has(baseName)) {
-      const fullPath = join(entitiesDir, file);
       console.log(
         `🗑  ${name}: 孤立エンティティを削除 → ${file} (スキーマ "${baseName}" が OpenAPI にも DbSet にも存在しません)`
       );

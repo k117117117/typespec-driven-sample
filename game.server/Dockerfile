@@ -1,13 +1,15 @@
-FROM mcr.microsoft.com/dotnet/sdk:9.0
+FROM mcr.microsoft.com/dotnet/sdk:10.0
 
 WORKDIR /src
 
 # csproj のみ先にコピーして依存関係をリストア
 # (ソースコードはボリュームマウントで提供)
-COPY game.server/GameServer.csproj ./game.server/
-RUN dotnet restore ./game.server/GameServer.csproj
+COPY game.server/Presentation/GameServer.Presentation.csproj ./game.server/Presentation/
+COPY game.server/Application/GameServer.Application.csproj ./game.server/Application/
+COPY game.server/Infrastructure/GameServer.Infrastructure.csproj ./game.server/Infrastructure/
+RUN dotnet restore ./game.server/Presentation/GameServer.Presentation.csproj
 
-WORKDIR /src/game.server
+WORKDIR /src/game.server/Presentation
 
 EXPOSE 5001
 
