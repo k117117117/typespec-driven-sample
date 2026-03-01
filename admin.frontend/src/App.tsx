@@ -1,28 +1,32 @@
 import { OpenApiAdmin, ResourceGuesser } from "@api-platform/admin";
 import { CustomRoutes } from "react-admin";
 import { Route } from "react-router-dom";
-import { ApprovalRequestList } from "./approval-request/ApprovalRequestList";
-import { ApprovalRequestShow } from "./approval-request/ApprovalRequestShow";
-import { ApprovalRequestEdit } from "./approval-request/ApprovalRequestEdit";
-import { ApprovalRequestCreate } from "./approval-request/ApprovalRequestCreate";
+import {
+  ApprovalRequestList,
+  ApprovalRequestShow,
+  ApprovalRequestEdit,
+  ApprovalRequestCreate,
+} from "./approval-request";
 import { HelloWorld } from "./hello-world/HelloWorld";
-import { CustomLayout } from "./layout/CustomLayout";
-
-export const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8080";
-const SCHEMA_URL = import.meta.env.VITE_SCHEMA_URL || `${API_URL}/openapi.json`;
+import { CustomLayout } from "./layout";
+import { i18nProvider } from "./i18n";
+import { API_URL, SCHEMA_URL } from "./config";
+import { resources } from "./resources";
+import { routes } from "./routes";
 
 const App = () => (
   <OpenApiAdmin
     entrypoint={API_URL}
     docEntrypoint={SCHEMA_URL}
     layout={CustomLayout}
+    i18nProvider={i18nProvider}
   >
     {/* CRUDに対応したページ(Reactコンポーネント)を明示的に指定しない場合は自動生成される */}
-    <ResourceGuesser name="admin-tool-users" />
+    <ResourceGuesser name={resources.adminToolUsers} />
 
     {/* CRUDに対応したページ(Reactコンポーネント)を明示的に指定 */}
     <ResourceGuesser
-      name="approval-requests"
+      name={resources.approvalRequests}
       list={ApprovalRequestList}
       show={ApprovalRequestShow}
       create={ApprovalRequestCreate}
@@ -33,7 +37,7 @@ const App = () => (
     <CustomRoutes>
       {/* カスタムルートは自動的にはMenuに追加されないので以下の方法で追加する必要がある */}
       {/* https://marmelab.com/react-admin/CustomRoutes.html#adding-custom-routes-to-the-menu */}
-      <Route path="/hello-world" element={<HelloWorld />} />
+      <Route path={routes.helloWorld} element={<HelloWorld />} />
     </CustomRoutes>
   </OpenApiAdmin>
 );
