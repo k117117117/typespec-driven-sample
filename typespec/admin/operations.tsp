@@ -30,6 +30,13 @@ interface ApprovalRequests {
   @route("{id}/reject") @post reject(@path id: int32): OkResponse | Error;
 }
 
+@route("/players")
+@tag("Players")
+interface Players {
+  @get list(): Read<Player>[] | Error;
+  @get read(@path id: int32): Read<Player> | Error;
+}
+
 @route("/healthz")
 @tag("Health")
 interface Health {
