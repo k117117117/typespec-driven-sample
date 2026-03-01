@@ -235,3 +235,9 @@ admin.frontend/src/
 - All created or edited files **must end with a newline** (final EOL before EOF).
 - `*/Generated/` files are auto-generated — do not modify them, including EOF newline fixes.
 
+## Git Workflow
+
+- **Do not commit or push automatically.** Leave changes staged (or unstaged) unless the user explicitly requests a commit.
+- When the user asks to commit, create the commit(s) **locally only** — do not push. The user may want to review, amend, or add more changes before pushing.
+- **Only push when the user explicitly asks for both commit and push.**
+
