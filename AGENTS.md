@@ -73,7 +73,7 @@ No test suite exists in this project.
 | Code gen (frontend) | openapi-typescript (OpenAPI → TypeScript types) |
 | Backend | ASP.NET Core 10, EF Core, PostgreSQL 17 |
 | Frontend | React 19, Vite, API Platform Admin (react-admin), openapi-fetch |
-| Infra | Docker Compose (nginx reverse proxy per service) |
+| Infra | Docker Compose |
 
 ## Language
 

@@ -11,7 +11,7 @@
     "nswag:generate:game-server": "cd game.server/Presentation && dotnet build -t:NSwag",
     "openapi:generate:ts": "cd admin.frontend && npm run openapi:generate",
     "generate:resources": "node scripts/generate-resources.mjs",
-    "tsp-and-nswag": "npm run tsp:compile && npm run nswag:generate && npm run clean:orphan-entities",
+    "tsp-and-nswag": "npm run tsp:compile && npm run nswag:generate && npm run clean:orphan-entities && docker compose restart admin-backend game-server-backend",
     "clean:orphan-entities": "node scripts/clean-orphan-entities.mjs",
     "build:backend": "dotnet build",
     "build:frontend": "cd admin.frontend && npm install && npm run build",

@@ -1,6 +1,6 @@
 services:
   # ===========================================
-  # Frontend: React (Vite dev server) + API Platform Admin + nginx
+  # Frontend: React (Vite dev server)
   # ===========================================
   admin-frontend:
     build:
@@ -8,26 +8,17 @@ services:
       dockerfile: Dockerfile
     volumes:
       - ./admin.frontend:/app
-      - /app/node_modules
+      - admin-frontend-node-modules:/app/node_modules
     environment:
-      - VITE_API_URL=http://localhost:8080
-      - VITE_SCHEMA_URL=http://localhost:8080/openapi.json
+      - VITE_API_URL=http://localhost:5000
+      - VITE_SCHEMA_URL=http://localhost:5000/openapi.json
     ports:
       - "3000:3000"
     depends_on:
       - admin-backend
 
-  admin-frontend-nginx:
-    image: nginx:alpine
-    ports:
-      - "80:80"
-    volumes:
-      - ./admin.frontend/nginx/default.conf:/etc/nginx/conf.d/default.conf
-    depends_on:
-      - admin-frontend
-
   # ===========================================
-  # Backend: ASP.NET Core (dotnet watch) + nginx
+  # Backend: ASP.NET Core (dotnet watch)
   # ===========================================
   admin-backend:
     build:
@@ -36,13 +27,12 @@ services:
     volumes:
       - ./admin.backend:/src/admin.backend
       - ./typespec/tsp-output/schema:/src/admin.backend/Presentation/openapi-schema:ro
-      - /src/admin.backend/Presentation/obj
-      - /src/admin.backend/Presentation/bin
-      - /src/admin.backend/schema
-      - /src/admin.backend/Application/obj
-      - /src/admin.backend/Application/bin
-      - /src/admin.backend/Infrastructure/obj
-      - /src/admin.backend/Infrastructure/bin
+      - admin-backend-pres-obj:/src/admin.backend/Presentation/obj
+      - admin-backend-pres-bin:/src/admin.backend/Presentation/bin
+      - admin-backend-app-obj:/src/admin.backend/Application/obj
+      - admin-backend-app-bin:/src/admin.backend/Application/bin
+      - admin-backend-infra-obj:/src/admin.backend/Infrastructure/obj
+      - admin-backend-infra-bin:/src/admin.backend/Infrastructure/bin
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://+:5000
@@ -57,17 +47,8 @@ services:
       game-server-backend:
         condition: service_started
 
-  admin-backend-nginx:
-    image: nginx:alpine
-    ports:
-      - "8080:80"
-    volumes:
-      - ./admin.backend/nginx/default.conf:/etc/nginx/conf.d/default.conf
-    depends_on:
-      - admin-backend
-
   # ===========================================
-  # Game Server: ASP.NET Core (dotnet watch) + nginx
+  # Game Server: ASP.NET Core (dotnet watch)
   # ===========================================
   game-server-backend:
     build:
@@ -76,13 +57,12 @@ services:
     volumes:
       - ./game.server:/src/game.server
       - ./typespec/tsp-output/schema:/src/game.server/Presentation/openapi-schema:ro
-      - /src/game.server/Presentation/obj
-      - /src/game.server/Presentation/bin
-      - /src/game.server/schema
-      - /src/game.server/Application/obj
-      - /src/game.server/Application/bin
-      - /src/game.server/Infrastructure/obj
-      - /src/game.server/Infrastructure/bin
+      - game-server-pres-obj:/src/game.server/Presentation/obj
+      - game-server-pres-bin:/src/game.server/Presentation/bin
+      - game-server-app-obj:/src/game.server/Application/obj
+      - game-server-app-bin:/src/game.server/Application/bin
+      - game-server-infra-obj:/src/game.server/Infrastructure/obj
+      - game-server-infra-bin:/src/game.server/Infrastructure/bin
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://+:5001
@@ -93,15 +73,6 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-
-  game-server-nginx:
-    image: nginx:alpine
-    ports:
-      - "8081:80"
-    volumes:
-      - ./game.server/nginx/default.conf:/etc/nginx/conf.d/default.conf
-    depends_on:
-      - game-server-backend
 
   # ===========================================
   # PostgreSQL
@@ -139,3 +110,19 @@ services:
 
 volumes:
   pgdata:
+  # admin-frontend
+  admin-frontend-node-modules:
+  # admin-backend (dotnet build artifacts)
+  admin-backend-pres-obj:
+  admin-backend-pres-bin:
+  admin-backend-app-obj:
+  admin-backend-app-bin:
+  admin-backend-infra-obj:
+  admin-backend-infra-bin:
+  # game-server-backend (dotnet build artifacts)
+  game-server-pres-obj:
+  game-server-pres-bin:
+  game-server-app-obj:
+  game-server-app-bin:
+  game-server-infra-obj:
+  game-server-infra-bin:

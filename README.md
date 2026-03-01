@@ -99,8 +99,7 @@ admin.frontend (App.tsx)
 │   │   └── generated/       # 自動生成ファイル (編集不要)
 │   │       ├── admin.d.ts       # openapi-typescript 型定義
 │   │       └── resources.g.ts   # CRUD リソース名定数
-│   ├── Dockerfile
-│   └── nginx/default.conf
+│   └── Dockerfile
 │
 ├── admin.backend/           # ASP.NET Core バックエンド (admin)
 │   ├── Presentation/        # プレゼンテーション層 (ASP.NET Core Web)
@@ -117,7 +116,7 @@ admin.frontend (App.tsx)
 │   │   ├── AdminToolUsers/  # エンティティ・リポジトリ実装
 │   │   └── ApprovalRequests/
 │   ├── Dockerfile
-│   └── nginx/default.conf
+│   └── Dockerfile
 │
 ├── game.server/             # ASP.NET Core バックエンド (game-server)
 │   ├── Presentation/        # プレゼンテーション層
@@ -132,7 +131,7 @@ admin.frontend (App.tsx)
 │   │   ├── Data/
 │   │   └── Players/
 │   ├── Dockerfile
-│   └── nginx/default.conf
+│   └── Dockerfile
 │
 ├── typespec/                # TypeSpec スキーマ定義
 │   ├── shared/
@@ -200,14 +199,13 @@ docker compose up -d
 
 | URL | 用途 |
 |---|---|
-| http://localhost | フロントエンド (nginx → Vite dev server へのリバースプロキシ) |
-| http://localhost:3000 | フロントエンド (Vite dev server 直接) |
-| http://localhost:8080 | バックエンド API (nginx → ASP.NET Core へのリバースプロキシ) |
-| http://localhost:8080/scalar | Scalar API リファレンス UI |
-| http://localhost:8081 | Game Server API (nginx → ASP.NET Core へのリバースプロキシ) |
+| http://localhost:3000 | フロントエンド (Vite dev server) |
+| http://localhost:5000 | バックエンド API (ASP.NET Core) |
+| http://localhost:5000/scalar | Scalar API リファレンス UI |
+| http://localhost:5001 | Game Server API (ASP.NET Core) |
 | http://localhost:5432 | PostgreSQL |
 
-> **Note:** 開発環境では Vite dev server (`:3000`) や Kestrel (`:5000`) に直接アクセスしても動作します。nginx は本番構成を想定したリバースプロキシの例として配置しています。
+> **Note:** 本番環境を想定する場合はnginxなどを構成に追加しても良い
 
 ## ドキュメント
 
