@@ -205,6 +205,7 @@ docker compose up -d
 | [フロントエンドの型安全性](docs/frontend-type-safety.md) | OpenAPI → TypeScript 型生成、リソース名・API 呼び出しの型安全性 |
 | [技術調査: Blazor & NSwag](docs/technical-investigation-blazor-nswag.md) | Blazor UIフレームワーク比較、NSwag型マッピング・Liquidテンプレート |
 | [フレームワーク比較](docs/framework-comparison.md) | API Platform Admin vs Refine vs Radzen Blazor の比較 |
+| [AI エージェント設定](docs/ai-agent-configuration.md) | AGENTS.md の構成と AI エージェント向けルール |
 
 ## リンク
 - TypeSpec  

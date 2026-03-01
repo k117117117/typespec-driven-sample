@@ -1,12 +1,19 @@
 # AGENTS
 
+## Output Efficiency
+
+- **Do not narrate steps.** Do not explain what you are about to do or just did. Summarize results once at the end.
+- Internal reasoning (thinking) is unrestricted — prioritize quality over token savings there.
+- Per-project context is in each project's own `AGENTS.md`. Read only the ones relevant to the current task (may be multiple when work spans projects).
+- `docs/` contains human-readable design docs. Read relevant ones when working on related topics (e.g., `url-design-notes.md` for routing, `design-philosophy.md` for architecture decisions).
+
 ## Architecture
 
-This is a **TypeSpec-driven schema-first** monorepo containing multiple backend services. The data flow is:
+This is a **TypeSpec-driven schema-first** monorepo. The data flow is:
 
 ```
 typespec/shared/model.tsp            ← Base models (cross-service concept definitions)
-typespec/<service>/model.tsp         ← Service-specific models (extendable via extends / Spread)
+typespec/<service>/model.tsp         ← Service-specific models (extends / Spread)
 typespec/<service>/operations.tsp    ← Route definitions
          ↓ (tsp compile)
 typespec/tsp-output/schema/openapi.<service>.json
@@ -20,206 +27,43 @@ typespec/tsp-output/schema/openapi.<service>.json
 
 ## Design Principles
 
-### TypeSpec Model Sharing and Per-Service Independence
-
-- `typespec/shared/model.tsp` defines **foundational concepts**. All services can `import` from it.
-- When service-specific extensions are needed, define extended models in `typespec/<service>/model.tsp` using `extends` or `...` (Spread).
-- **No shared C# class library (e.g., shared.models) is needed.** NSwag generates independent DTOs per service, so type sharing at the C# level is unnecessary.
-
-```typespec
-// shared/model.tsp — Foundational concepts
-model Player { id: int32; name: string; level: int32; }
-
-// game-server/model.tsp — Service-specific extension
-model GamePlayer extends Player { score: int64; lastLoginAt: offsetDateTime; }
-
-// admin/model.tsp — Another service's extension
-model ManagedPlayer { ...Player; isBanned: boolean; }
-```
-
-**Why no shared C# library?**
-
-1. **API contracts evolve independently per service** — It is natural for admin and game-server to expose different fields for the same concept.
-2. **Avoid double management** — Hand-writing shared C# classes on top of NSwag-generated DTOs adds a mapping layer and increases maintenance cost.
-3. **Deploy independence** — If a shared library changes due to service A, service B must also be rebuilt.
-4. **TypeSpec is the schema-level single source of truth** — Concept sharing is handled entirely in TypeSpec. C# is left to NSwag auto-generation.
-
-### Orphan Entity Auto-Cleanup
-
-`scripts/clean-orphan-entities.mjs` runs at the end of `npm run tsp-and-nswag`.  
-When a model is deleted in TypeSpec, the corresponding `*Entity.cs` is compared against the OpenAPI schema and automatically deleted.  
-However, **entities registered in `AppDbContext.cs` via `DbSet<T>` are protected** (to prevent accidental deletion of DB-only entities).
-
-### EF Core Entities Are Service-Local
-
-Each service places `*Entity.cs` files in its own `Infrastructure/<ResourceName>/` directory.  
-Each service is responsible for its own DB schema.
-
-## TypeSpec Structure
-
-```
-typespec/
-├── shared/
-│   └── model.tsp          # Common models shared across all services (Error, Player, etc.)
-├── admin/
-│   ├── main.tsp            # Service entry point
-│   ├── model.tsp           # Admin-specific models (AdminToolUser, ApprovalRequest, etc.)
-│   ├── operations.tsp      # CRUD route definitions
-│   └── tspconfig.yaml      # output: openapi.admin.json
-├── game-server/
-│   ├── main.tsp
-│   ├── model.tsp           # Game-server-specific models
-│   ├── operations.tsp      # Players CRUD, Health
-│   └── tspconfig.yaml      # output: openapi.gameserver.json
-└── tsp-output/schema/
-    ├── openapi.admin.json       # Auto-generated (do not edit)
-    └── openapi.gameserver.json  # Auto-generated (do not edit)
-```
+- `typespec/shared/model.tsp` defines foundational concepts. Services import from it.
+- Service-specific extensions go in `typespec/<service>/model.tsp` using `extends` or `...` (Spread).
+- **No shared C# class library needed.** NSwag generates independent DTOs per service. Concept sharing is handled entirely in TypeSpec.
+- Each service's EF Core entities are service-local (`Infrastructure/<ResourceName>/`).
+- Each service follows a 3-project split: Presentation / Application / Infrastructure (see per-service AGENTS.md).
 
 ## Build & Run Commands
 
 ```bash
-# Start everything (Docker required)
-docker compose up -d
-
-# Regenerate code after changing .tsp files
-npm run tsp-and-nswag       # TypeSpec compile + NSwag C# generation + orphan cleanup
-
-# Individual steps
-npm run tsp:compile          # TypeSpec → openapi.json (all services)
-npm run tsp:compile:admin    # admin only
-npm run tsp:compile:game-server  # game-server only
-npm run nswag:generate       # openapi.json → C# controllers (all services)
-npm run clean:orphan-entities    # Detect and delete orphan *Entity.cs files
-npm run build:backend        # dotnet build
-npm run build:frontend       # npm install + vite build (in admin.frontend/)
-npm run openapi:generate:ts  # openapi.json → TypeScript types (admin.frontend/)
-
-# Clean restart (rebuilds images, resets DB)
-npm run down:clean && npm run up:build
+docker compose up -d                         # Start everything (Docker required)
+npm run tsp-and-nswag                        # TypeSpec compile + NSwag + orphan cleanup
+npm run tsp:compile                          # TypeSpec → openapi.json (all services)
+npm run tsp:compile:admin                    # admin only
+npm run tsp:compile:game-server              # game-server only
+npm run nswag:generate                       # openapi.json → C# controllers (all)
+npm run clean:orphan-entities                # Detect/delete orphan *Entity.cs files
+npm run build:backend                        # dotnet build
+npm run build:frontend                       # npm install + vite build (admin.frontend/)
+npm run openapi:generate:ts                  # openapi.json → TypeScript types (admin.frontend/)
+npm run down:clean && npm run up:build       # Clean restart (rebuild images, reset DB)
 ```
 
 No test suite exists in this project.
 
-## Code Generation Conventions
+## Files You Must NOT Edit by Hand
 
-### Files you must NOT edit by hand
-- `*/Presentation/Generated/Controllers.g.cs` — auto-generated by NSwag. Regenerate with `npm run nswag:generate`.
-- `typespec/tsp-output/` — auto-generated by TypeSpec compiler.
-- `admin.frontend/src/generated/` — auto-generated by openapi-typescript. Regenerate with `npm run openapi:generate:ts`.
+- `*/Presentation/Generated/Controllers.g.cs` — NSwag auto-generated. Regenerate: `npm run nswag:generate`
+- `typespec/tsp-output/` — TypeSpec compiler output. Regenerate: `npm run tsp:compile`
+- `admin.frontend/src/generated/` — openapi-typescript output. Regenerate: `npm run openapi:generate:ts`
 
-### Backend: Adding a new API resource
-
-1. Define the model in `typespec/<service>/model.tsp` (or `shared/model.tsp` if shared). Use `@visibility(Lifecycle.Read)` to mark read-only fields.
-2. Define CRUD routes in `typespec/<service>/operations.tsp` as a TypeSpec `interface` using `Read<T>`, `Create<T>`, `Update<T>` lifecycle wrappers.
-3. Run `npm run tsp-and-nswag` to regenerate OpenAPI JSON, `Controllers.g.cs`, and clean up orphan entities.
-4. **Domain layer** (`<service>/Application/Domain/<ResourceName>/`):
-   - Create `Models/<ResourceName>.cs` — Domain model with `internal` factory/mutation methods, `public` Reconstruct and properties.
-   - Create `Repositories/I<ResourceName>Repository.cs` — Repository interface.
-5. **Application layer** (`<service>/Application/Application/<ResourceName>/`):
-   - Create `<ResourceName>ApplicationService.cs` — Application service orchestrating use cases.
-6. **Infrastructure layer** (`<service>/Infrastructure/<ResourceName>/`):
-   - Create `<ResourceName>Entity.cs` — `internal` EF Core entity.
-   - Create `<ResourceName>Repository.cs` — `internal` repository implementation (Entity ↔ Domain model conversion).
-   - Register `DbSet` in `<service>/Infrastructure/Data/AppDbContext.cs`. Enums use `HasConversion<string>()`.
-   - Register DI in `<service>/Infrastructure/DependencyInjection.cs`.
-7. **Presentation layer** (`<service>/Presentation/<ResourceName>/`):
-   - Create `<ResourceName>Controller.cs` — Inherits NSwag abstract controller (e.g., `FooController : FooControllerBaseControllerBase`).
-   - Uses **primary constructor DI** with ApplicationService: `public class FooController(FooApplicationService appService)`.
-   - Map between NSwag DTOs (e.g., `ReadFoo`, `CreateFoo`) and domain models using private static helper methods (`ToReadDto`, `ToListItem`).
-8. Register ApplicationService in `<service>/Presentation/Program.cs` via `AddScoped<>()`.
-
-### Layered Architecture (3-project split per service)
-
-Each service is split into 3 .csproj projects following the Layered_UsingInternal pattern:
-
-```
-<service>/
-├── Presentation/
-│   ├── <Service>.Presentation.csproj    ← Web (ASP.NET, NSwag, Scalar)
-│   ├── Program.cs                       ← DI registration
-│   ├── Generated/Controllers.g.cs       ← NSwag auto-generated (do not edit)
-│   ├── <Resource>/<Resource>Controller.cs ← HTTP endpoint implementation
-│   └── Health/HealthController.cs
-├── Application/
-│   ├── <Service>.Application.csproj     ← Domain + Application (pure C# classlib, RootNamespace: <Service>)
-│   ├── Domain/
-│   │   └── <Resource>/
-│   │       ├── Models/<Resource>.cs     ← Domain model (internal Create/Update, public Reconstruct)
-│   │       └── Repositories/I<Resource>Repository.cs ← Interface
-│   └── Application/
-│       └── <Resource>/
-│           └── <Resource>ApplicationService.cs ← Use case orchestration
-└── Infrastructure/
-    ├── <Service>.Infrastructure.csproj   ← EF Core, Npgsql (→ Application reference)
-    ├── DependencyInjection.cs           ← Public DI extension method
-    ├── Data/AppDbContext.cs             ← internal DbContext
-    └── <Resource>/
-        ├── <Resource>Entity.cs          ← internal EF Core entity
-        └── <Resource>Repository.cs      ← internal repository implementation
-```
-
-**Namespace convention:**
-- Domain models/repos: `<Service>.Domain.<Resource>.*` (e.g., `GameServer.Domain.Players.Models`, `AdminBackend.Domain.AdminToolUsers.Models`)
-- Application services: `<Service>.Application.<Resource>` (e.g., `GameServer.Application.Players`, `AdminBackend.Application.AdminToolUsers`)
-- Infrastructure: `<Service>.Infrastructure.*`
-- Presentation: `<Service>.*` (keeps original namespace for controllers)
-
-**Dependency direction:** Presentation → Application ← Infrastructure (dependency inversion via DI)
-
-**`internal` modifier usage:**
-- Domain: `Create()`, `Update*()` methods → prevents Controller from bypassing ApplicationService
-- Infrastructure: Entity, Repository, AppDbContext → prevents Web from bypassing Repository
-
-### Frontend: Adding UI for a resource
-
-- For auto-generated CRUD UI, add a `ResourceGuesser` in `App.tsx` using a type-safe resource name from `resources.ts`:
-  ```tsx
-  import { resources } from "./resources";
-  <ResourceGuesser name={resources.newResource} />
-  ```
-  Then add the new resource name to `resources.ts` with `satisfies ResourceName` for compile-time validation.
-- For custom UI, create components in `admin.frontend/src/<resource-name>/` (kebab-case) and pass them as props to `ResourceGuesser` (`list`, `show`, `create`, `edit`). Add a barrel export (`index.ts`) in the feature folder.
-- Use `FieldGuesser`/`InputGuesser` from `@api-platform/admin` for fields; they auto-detect types from the OpenAPI schema.
-- Non-CRUD actions (like approve/reject) use the type-safe `apiClient` from `api-client.ts` (powered by `openapi-fetch`). Paths, methods, and parameters are validated against the generated OpenAPI types at compile time.
-- Custom routes (non-API pages) use react-admin's `<CustomRoutes>` with paths from `routes.ts`. They must be manually added to the menu in `layout/CustomMenu`.
-
-### Frontend: File organization
-
-```
-admin.frontend/src/
-├── App.tsx              ← Main app component (OpenApiAdmin)
-├── config.ts            ← Environment variables (API_URL, SCHEMA_URL)
-├── resources.ts         ← Type-safe resource name constants (validated against OpenAPI paths)
-├── routes.ts            ← Frontend internal routing paths (as const)
-├── api-client.ts        ← openapi-fetch typed API client
-├── main.tsx             ← React entry point
-├── generated/           ← openapi-typescript auto-generated types (do not edit, gitignored)
-│   └── admin.d.ts
-├── types/               ← Hand-written types derived from generated types
-│   └── resource.ts      ← ResourceName union type (derived from paths keys)
-├── i18n/                ← Internationalization
-│   ├── index.ts         ← i18nProvider export
-│   └── ja.ts            ← Japanese translations
-├── <resource-name>/     ← Feature folders (kebab-case, with index.ts barrel export)
-├── layout/              ← Custom layout and menu
-└── hello-world/         ← Custom page example
-```
-
-**Key conventions:**
-- `generated/` is gitignored and regenerated via `npm run openapi:generate:ts`
-- `types/` contains hand-written types that extend or derive from generated types
-- Feature folders use barrel exports (`index.ts`) to keep imports clean
-- API paths are NOT defined as constants — they are type-checked via `openapi-fetch` and discoverable via IDE autocomplete
-- Frontend routing paths ARE centralized in `routes.ts`
-
-## Tech Stack Details
+## Tech Stack
 
 | Layer | Technology |
 |---|---|
 | Schema | TypeSpec → OpenAPI 3.1 JSON |
 | Code gen (backend) | NSwag (`openapi2cscontroller`, abstract style) |
-| Code gen (frontend) | openapi-typescript (OpenAPI → TypeScript type definitions) |
+| Code gen (frontend) | openapi-typescript (OpenAPI → TypeScript types) |
 | Backend | ASP.NET Core 10, EF Core, PostgreSQL 17 |
 | Frontend | React 19, Vite, API Platform Admin (react-admin), openapi-fetch |
 | Infra | Docker Compose (nginx reverse proxy per service) |
@@ -229,7 +73,7 @@ admin.frontend/src/
 - **Internal reasoning / thinking:** English
 - **User-facing output (responses, commit messages, code comments, PR descriptions):** User's input language (default: Japanese)
 - **Interactive prompts (confirmation dialogs, choice labels):** User's input language (e.g., "はい" / "いいえ" instead of "Yes" / "No")
-- **This file (AGENTS.md):** English (optimized for AI agent comprehension)
+- **AGENTS.md files:** English (optimized for AI agent comprehension)
 
 ## File Formatting
 
@@ -238,7 +82,7 @@ admin.frontend/src/
 
 ## Git Workflow
 
-- **Do not commit or push automatically.** Leave changes staged (or unstaged) unless the user explicitly requests a commit.
-- When the user asks to commit, create the commit(s) **locally only** — do not push. The user may want to review, amend, or add more changes before pushing.
+- **Do not commit or push automatically.** Leave changes staged/unstaged unless explicitly requested.
+- On commit request: create commit(s) **locally only** — do not push.
 - **Only push when the user explicitly asks for both commit and push.**
 
