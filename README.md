@@ -74,9 +74,16 @@ admin.frontend (App.tsx)
 ├── admin.frontend/          # React フロントエンド
 │   ├── src/
 │   │   ├── App.tsx          # メインアプリ (OpenApiAdmin)
-│   │   ├── approvalRequest/ # 承認リクエスト画面 (カスタム)
-│   │   ├── helloWorld/      # カスタムページ例
-│   │   └── layout/          # カスタムレイアウト・メニュー
+│   │   ├── config.ts        # 環境変数 (API_URL, SCHEMA_URL)
+│   │   ├── resources.ts     # リソース名定数 (型安全, OpenAPI 由来)
+│   │   ├── routes.ts        # フロントエンド内部ルーティングパス
+│   │   ├── api-client.ts    # openapi-fetch 型付き API クライアント
+│   │   ├── approval-request/ # 承認リクエスト画面 (カスタム)
+│   │   ├── hello-world/     # カスタムページ例
+│   │   ├── layout/          # カスタムレイアウト・メニュー
+│   │   ├── i18n/            # 国際化 (日本語ローカライズ)
+│   │   ├── types/           # 生成型を元にした手書きの型定義
+│   │   └── generated/       # openapi-typescript 自動生成 (編集不要)
 │   ├── Dockerfile
 │   └── nginx/default.conf
 │
@@ -152,9 +159,10 @@ admin.frontend (App.tsx)
 | レイヤー | 技術 |
 |---|---|
 | スキーマ定義 | TypeSpec → OpenAPI (中間出力) |
-| コード生成 | NSwag (OpenAPI → C# コントローラー) |
-| バックエンド | ASP.NET Core 9 + Entity Framework Core |
-| フロントエンド | React + Vite + API Platform Admin (react-admin) |
+| コード生成 (バックエンド) | NSwag (OpenAPI → C# コントローラー) |
+| コード生成 (フロントエンド) | openapi-typescript (OpenAPI → TypeScript 型定義) |
+| バックエンド | ASP.NET Core 10 + Entity Framework Core |
+| フロントエンド | React + Vite + API Platform Admin (react-admin) + openapi-fetch |
 | データベース | PostgreSQL 17 |
 | インフラ | Docker Compose |
 
@@ -165,7 +173,7 @@ admin.frontend (App.tsx)
 以下はオプション（Docker だけでも `docker compose up -d` で起動・動作可能）:
 
 - Node.js — npm scripts (`npm run up` 等) を使う場合
-- .NET SDK 9.0 — NSwag コード生成 (`npm run nswag:generate`) をローカルで実行する場合
+- .NET SDK 10.0 — NSwag コード生成 (`npm run nswag:generate`) をローカルで実行する場合
 
 ## クイックスタート
 
@@ -185,187 +193,18 @@ docker compose up -d
 
 > **Note:** 開発環境では Vite dev server (`:3000`) や Kestrel (`:5000`) に直接アクセスしても動作します。nginx は本番構成を想定したリバースプロキシの例として配置しています。
 
-## npm scripts
+## ドキュメント
 
-```bash
-npm run up              # docker compose up -d
-npm run up:build        # docker compose up -d --build
-npm run down            # docker compose down
-npm run down:clean      # docker compose down -v (ボリュームも削除)
+詳細なリファレンスは `docs/` を参照してください。
 
-npm run tsp-and-nswag   # TypeSpec コンパイル + NSwag コード生成 + 孤立エンティティ削除 (セット)
-npm run tsp:compile     # TypeSpec コンパイルのみ
-npm run nswag:generate  # NSwag コード生成のみ
-npm run clean:orphan-entities  # 孤立 *Entity.cs の検出・削除
-
-npm run build:backend   # バックエンドビルド
-npm run build:frontend  # フロントエンドビルド
-npm run build:all       # 全ビルド (tsp+nswag → backend → frontend)
-```
-
-## 開発ワークフロー
-
-### TypeSpec スキーマ (.tsp) を修正した場合
-
-```bash
-npm run tsp-and-nswag
-```
-
-TypeSpec コンパイル → NSwag コード生成が実行され、生成された C# コントローラーは `dotnet watch` が自動検知して反映します。
-
-NSwag が `Presentation/Generated/Controllers.g.cs` に抽象コントローラーと DTO クラスを自動生成するので、以下の順序で実装を追加・更新してください:
-
-1. **`Application/Domain/<リソース名>/Models/<リソース名>.cs`** — ドメインモデル。ビジネスルール（バリデーション、状態遷移）をここに集約する。  
-`internal` な生成メソッド (`Create`) と変更メソッド (`Update*`) 、`public` な復元メソッド (`Reconstruct`) を持つ。
-2. **`Application/Domain/<リソース名>/Repositories/I<リソース名>Repository.cs`** — リポジトリインターフェース。ドメインモデルを受け渡す CRUD 操作を定義する。
-3. **`Application/Application/<リソース名>/<リソース名>ApplicationService.cs`** — アプリケーションサービス。ユースケース（登録・更新・削除等）のオーケストレーションを行う。  
-ドメインモデルの `internal` メソッドを呼び出せる唯一のレイヤー。
-4. **`Infrastructure/<リソース名>/<リソース名>Entity.cs`** — EF Core エンティティ (`internal`)。DB カラムと 1:1 対応するプロパティを持つ。
-5. **`Infrastructure/<リソース名>/<リソース名>Repository.cs`** — リポジトリ実装 (`internal`)。Entity ↔ ドメインモデルの変換を担う。
-6. **`Infrastructure/Data/AppDbContext.cs`** — `DbSet<Entity>` の登録。enum は `HasConversion<string>()` で文字列永続化。
-7. **`Infrastructure/DependencyInjection.cs`** — リポジトリの DI 登録 (`AddScoped<IRepo, Repo>`)。
-8. **`Presentation/<リソース名>/<リソース名>Controller.cs`** — NSwag 生成の抽象コントローラーを継承し、ApplicationService を primary constructor で DI。  
-NSwag DTO ↔ ドメインモデルのマッピングを private static メソッドで行う。
-9. **`Presentation/Program.cs`** — ApplicationService の DI 登録 (`AddScoped<>`)。
-
-### NSwag コード生成の設定 (`nswag.json`)
-
-各サービスの `Presentation/nswag.json` で NSwag のコード生成オプションを管理しています。生成されるコントローラーのクラス名・名前空間・スタイル等を変更したい場合はこのファイルを編集してください。
-
-```
-admin.backend/Presentation/nswag.json    ← admin バックエンド用
-game.server/Presentation/nswag.json      ← ゲームサーバー用
-```
-
-設定変更後は `npm run nswag:generate`（または `dotnet build -t:NSwag`）で再生成されます。
-
-#### 設定可能なオプションの調べ方
-
-NSwag の公式ドキュメントは網羅的ではないため、以下の方法でオプションを確認できます:
-
-| 方法 | 説明 |
+| ドキュメント | 内容 |
 |---|---|
-| **公式サンプル** | [NSwag.Sample.NET100/nswag.json](https://github.com/RicoSuter/NSwag/blob/master/src/NSwag.Sample.NET100/nswag.json) — 全オプションがデフォルト値付きで列挙されている（.NET 10 向けサンプル） |
-| **NSwagStudio** | Windows GUI ツール。全オプションをフォームで確認・編集し `.nswag` ファイルとして保存できる ([Wiki](https://github.com/RicoSuter/NSwag/wiki/NSwagStudio)) |
-| **CLI ヘルプ** | `nswag help openapi2cscontroller` で C# コントローラー生成の全パラメータを一覧表示 |
-| **Wiki** | [NSwag Configuration Document](https://github.com/RicoSuter/NSwag/wiki/NSwag-Configuration-Document)、[CSharpControllerGenerator](https://github.com/RicoSuter/NSwag/wiki/CSharpControllerGenerator) |
-| **ソースコード** | 最も正確。[CSharpControllerGeneratorSettings.cs](https://github.com/RicoSuter/NSwag/blob/master/src/NSwag.CodeGeneration.CSharp/CSharpControllerGeneratorSettings.cs) のプロパティがそのまま nswag.json のキーに対応 |
-
-> **Tip:** NSwag の公式ドキュメントは網羅的ではないため、最新かつ詳細な設定例は [GitHub リポジトリの `src/` 配下にあるサンプルプロジェクト群](https://github.com/RicoSuter/NSwag/tree/master/src) (`NSwag.Sample.*`) を直接参照するのが最も確実です。NSwagStudio で設定を調整してからエクスポートした JSON を `nswag.json` にマージする方法も手軽です。
-
-### サーバー・バックエンド (C#) を修正した場合
-
-→ **何もしなくてOK**。`dotnet watch` がファイル変更を検知して自動的にリビルド＆再起動します。
-
-### フロントエンド (React) を修正した場合
-
-→ **何もしなくてOK**。Vite HMR がファイル変更を検知して自動的にブラウザに反映されます。
-
-### 依存関係 (package.json / .csproj) を変更した場合
-
-```bash
-npm run down:clean
-npm run up:build
-```
-
-Docker イメージの再ビルドとボリュームの再作成が必要です。
-
-## DB 接続情報 (開発環境)
-
-| 項目 | 値 |
-|---|---|
-| ホスト | `localhost` |
-| ポート | `5432` |
-| ユーザー (root) | `postgres` |
-| パスワード | `postgres` |
-
-| データベース | 用途 | 作成方法 |
-|---|---|---|
-| `gameserver` | game.server 用 | `scripts/init-db.sh` (コンテナ初回起動時) |
-| `admin` | admin.backend 用 | `scripts/init-db.sh` (コンテナ初回起動時) |
-
-各アプリケーションのテーブルは、開発環境では EF Core の `Database.EnsureCreated()` により起動時に自動作成されます（Migration は今は使用していません）。
-
-## TypeSpec + API Platform Admin における URL 設計の注意点
-
-### React Admin のルーティング規約
-
-React Admin は `<Resource>` コンポーネントで定義されたリソースに対して、以下の固定ルートを生成します（[Routing - Route Components](https://marmelab.com/react-admin/Routing.html#route-components)）。
-
-| ルートパターン | 画面 | マウント時に呼ばれる dataProvider メソッド |
-|---|---|---|
-| `/:resource` | 一覧 (list) | `getList()` |
-| `/:resource/create` | 新規作成 (create) | — (`create()` は submit 時) |
-| `/:resource/:id/edit` | 編集 (edit) | `getOne()` (`update()` は submit 時) |
-| `/:resource/:id/show` | 詳細 (show) | `getOne()` |
-
-`create`, `edit`, `show` は予約語として扱われ、`:id` パラメータとは区別されます。
-
-### API Platform Admin (`OpenApiAdmin`) の役割
-
-React Admin 自体は URL と API エンドポイントの対応を知りません（[Resource - Usage](https://marmelab.com/react-admin/Resource.html#usage)）。
-
-> "The `<Resource>` component doesn't know this mapping - it's the dataProvider's job to define it."
-
-本プロジェクトでは **API Platform Admin の `openApiDataProvider`** がこの役割を担っています。`OpenApiAdmin` は OpenAPI 仕様の `paths` をパースして `ResourceGuesser` の `name`（例: `"approval-requests"`）を API エンドポイント（例: `/approval-requests`, `/approval-requests/{id}`）に自動マッピングします。
-
-### ネストした URL を設計する際の注意
-
-**React Admin はネストされたリソースをサポートしていません**（[Resource - Nested Resources](https://marmelab.com/react-admin/Resource.html#nested-resources)）。
-
-> "React-admin doesn't support nested resources, but you can use the children prop to render a custom component for a given sub-route."
-
-TypeSpec でルートを定義する際、以下のようなパスの衝突に注意が必要です。
-
-#### 問題のある例
-
-```typespec
-@route("/resources")
-interface Resources {
-  @get list(): Resource[];
-  @get read(@path id: int32): Resource;          // → /resources/{id}
-}
-
-@route("/resources/subresources")
-interface SubResources {
-  @get list(): SubResource[];                     // → /resources/subresources
-  @get read(@path id: int32): SubResource;        // → /resources/subresources/{id}
-}
-```
-
-この場合 `/resources/subresources` が `/resources/:id`（`:id = "subresources"`）と **ルートパターンが衝突** します。React Router は `subresources` という文字列をリソース `resources` の ID として解釈し、意図しない `getOne("resources", { id: "subresources" })` が発呼されることがあります。
-
-これは React Admin の「親リソースを自動フェッチする仕様」ではなく、**ルートの衝突による副作用** です。
-
-#### 推奨する設計
-
-- リソース名にスラッシュを含むパスを使う場合は、既存リソースのパスと衝突しないようにする
-- ネストが必要な場合は `<Resource>` の `children` prop で子ルートを定義し、`useParams` で手動パラメータ取得 + `resource` prop の明示指定を行う
-- React Admin の CRUD 規約に乗らないルート（例: `approve`, `reject` などのアクション）は `<CustomRoutes>` を使うか、ボタン等から直接 API を呼ぶ
-
-```tsx
-// CustomRoutes の例 (本プロジェクトの App.tsx より)
-<CustomRoutes>
-  <Route path="/hello-world" element={<HelloWorld />} />
-</CustomRoutes>
-```
-
-### 参考: 本プロジェクトの URL マッピング
-
-TypeSpec で定義したルートが OpenAPI → API Platform Admin を経由して最終的にどう対応するかの一覧です。
-
-| TypeSpec ルート | OpenAPI path | React Admin URL | 画面 |
-|---|---|---|---|
-| `@route("/admin-tool-users")` GET | `/admin-tool-users` | `/admin-tool-users` | 一覧 |
-| `@route("/admin-tool-users")` POST | `/admin-tool-users` | `/admin-tool-users/create` | 新規作成 |
-| `@route("/admin-tool-users")` GET `@path id` | `/admin-tool-users/{id}` | `/admin-tool-users/{id}/edit` | 編集 |
-| `@route("/admin-tool-users")` GET `@path id` | `/admin-tool-users/{id}` | `/admin-tool-users/{id}/show` | 詳細 |
-| `@route("/approval-requests")` GET | `/approval-requests` | `/approval-requests` | 一覧 |
-| `@route("/approval-requests")` POST | `/approval-requests` | `/approval-requests/create` | 新規作成 |
-| `@route("/approval-requests/{id}/approve")` POST | `/approval-requests/{id}/approve` | — (ボタンから直接呼出) | 承認アクション |
-| `@route("/approval-requests/{id}/reject")` POST | `/approval-requests/{id}/reject` | — (ボタンから直接呼出) | 却下アクション |
-
-`approve` / `reject` のようなリソース CRUD に該当しないアクションは React Admin のルーティング規約外のため、画面上のボタンから `dataProvider` や `fetch` で直接 API を呼び出しています。
+| [開発ワークフロー](docs/development-workflow.md) | npm scripts、スキーマ修正時の手順、NSwag 設定、DB 接続情報 |
+| [設計方針・思想](docs/design-philosophy.md) | スキーマ駆動開発・コントラクトファースト開発の所感 |
+| [URL 設計の注意点](docs/url-design-notes.md) | TypeSpec + API Platform Admin のルーティング規約と設計指針 |
+| [フロントエンドの型安全性](docs/frontend-type-safety.md) | OpenAPI → TypeScript 型生成、リソース名・API 呼び出しの型安全性 |
+| [技術調査: Blazor & NSwag](docs/technical-investigation-blazor-nswag.md) | Blazor UIフレームワーク比較、NSwag型マッピング・Liquidテンプレート |
+| [フレームワーク比較](docs/framework-comparison.md) | API Platform Admin vs Refine vs Radzen Blazor の比較 |
 
 ## リンク
 - TypeSpec  
@@ -376,6 +215,10 @@ https://github.com/api-platform/admin
 https://github.com/marmelab/react-admin
 - NSwag  
 https://github.com/RicoSuter/NSwag
+- openapi-typescript  
+https://openapi-ts.dev/
+- openapi-fetch  
+https://openapi-ts.dev/openapi-fetch/
 - Open API  
 https://github.com/OAI/OpenAPI-Specification
 
@@ -402,8 +245,10 @@ https://github.com/RicoSuter/NSwag/tree/master/src
 ## ToDo 
 思っているだけで実際にやるかは別ですがTypeSpecを軸にしたスキーマ駆動&コントラクトファースト開発のサンプルに拡張できたらいいなと思っています  
 - [x] 別のASP.NETサーバーのプロジェクトを追加する (game.server)
+- [x] 自動生成したAPIクライアント(TypeScript)をWebフロントエンドで使うサンプルの追加
 - [ ] Unityのプロジェクトを追加する
-- [ ] 自動生成したAPIクライアント(C#)をUnityや別のサーバーで使うサンプルの追加
-- [ ] 自動生成したAPIクライアント(TypeScript)をWebフロントエンドで使うサンプルの追加
+- [ ] 自動生成したAPIクライアント(C#)をUnityや複数サービス間で使うサンプルの追加
 - [ ] NSwagのコード生成でopenapi.jsonの型とC#の型のマッピングを指定するサンプルの追加（できるのか知らないけど）
 - [ ] NSwagのコード生成でliquidを使用した出力テンプレートのカスタマイズをするサンプルの追加
+- [ ] 管理ツールのフロントエンドでRazen Blazorを試してみる
+- [ ] 管理ツールのフロントエンドでRazen Blazor Studioを使用してOpenAPIからUIを自動生成してみる
