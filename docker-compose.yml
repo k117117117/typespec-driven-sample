@@ -35,10 +35,14 @@ services:
       dockerfile: admin.backend/Dockerfile
     volumes:
       - ./admin.backend:/src/admin.backend
-      - ./typespec/tsp-output/schema:/src/admin.backend/openapi-schema:ro
-      - /src/admin.backend/obj
-      - /src/admin.backend/bin
+      - ./typespec/tsp-output/schema:/src/admin.backend/Presentation/openapi-schema:ro
+      - /src/admin.backend/Presentation/obj
+      - /src/admin.backend/Presentation/bin
       - /src/admin.backend/schema
+      - /src/admin.backend/Application/obj
+      - /src/admin.backend/Application/bin
+      - /src/admin.backend/Infrastructure/obj
+      - /src/admin.backend/Infrastructure/bin
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://+:5000
@@ -68,10 +72,14 @@ services:
       dockerfile: game.server/Dockerfile
     volumes:
       - ./game.server:/src/game.server
-      - ./typespec/tsp-output/schema:/src/game.server/openapi-schema:ro
-      - /src/game.server/obj
-      - /src/game.server/bin
+      - ./typespec/tsp-output/schema:/src/game.server/Presentation/openapi-schema:ro
+      - /src/game.server/Presentation/obj
+      - /src/game.server/Presentation/bin
       - /src/game.server/schema
+      - /src/game.server/Application/obj
+      - /src/game.server/Application/bin
+      - /src/game.server/Infrastructure/obj
+      - /src/game.server/Infrastructure/bin
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://+:5001
