@@ -228,6 +228,7 @@ admin.frontend/src/
 
 - **Internal reasoning / thinking:** English
 - **User-facing output (responses, commit messages, code comments, PR descriptions):** User's input language (default: Japanese)
+- **Interactive prompts (confirmation dialogs, choice labels):** User's input language (e.g., "はい" / "いいえ" instead of "Yes" / "No")
 - **This file (AGENTS.md):** English (optimized for AI agent comprehension)
 
 ## File Formatting
