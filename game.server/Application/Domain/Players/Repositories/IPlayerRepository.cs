@@ -7,7 +7,7 @@ namespace GameServer.Domain.Players.Repositories;
 /// </summary>
 public interface IPlayerRepository
 {
-    Task<IReadOnlyList<Player>> GetAllAsync(CancellationToken cancellationToken = default);
+    Task<(IReadOnlyList<Player> Items, int Total)> GetAllAsync(int? offset, int? limit, CancellationToken cancellationToken = default);
     Task<Player?> GetByIdAsync(int id, CancellationToken cancellationToken = default);
     Task<Player> AddAsync(Player player, CancellationToken cancellationToken = default);
     Task UpdateAsync(Player player, CancellationToken cancellationToken = default);

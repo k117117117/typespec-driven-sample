@@ -10,10 +10,18 @@ namespace AdminBackend.Infrastructure.ApprovalRequests;
 /// </summary>
 internal class ApprovalRequestRepository(AppDbContext db) : IApprovalRequestRepository
 {
-    public async Task<IReadOnlyList<ApprovalRequest>> GetAllAsync(CancellationToken cancellationToken = default)
+    public async Task<(IReadOnlyList<ApprovalRequest> Items, int Total)> GetAllAsync(int? offset, int? limit, CancellationToken cancellationToken = default)
     {
-        var entities = await db.ApprovalRequests.AsNoTracking().ToListAsync(cancellationToken);
-        return entities.Select(ToDomain).ToList();
+        var query = db.ApprovalRequests.AsNoTracking();
+        var total = await query.CountAsync(cancellationToken);
+
+        if (offset.HasValue)
+            query = query.Skip(offset.Value);
+        if (limit.HasValue)
+            query = query.Take(limit.Value);
+
+        var entities = await query.ToListAsync(cancellationToken);
+        return (entities.Select(ToDomain).ToList(), total);
     }
 
     public async Task<ApprovalRequest?> GetByIdAsync(int id, CancellationToken cancellationToken = default)
@@ -67,13 +75,15 @@ internal class ApprovalRequestRepository(AppDbContext db) : IApprovalRequestRepo
     {
         ApprovalStatusValue.Approved => ApprovalStatus.Approved,
         ApprovalStatusValue.Rejected => ApprovalStatus.Rejected,
-        _ => ApprovalStatus.Pending
+        ApprovalStatusValue.Pending => ApprovalStatus.Pending,
+        _ => throw new ArgumentException($"Invalid status: {status}")
     };
 
     private static ApprovalStatusValue ToEntityStatus(ApprovalStatus status) => status switch
     {
         ApprovalStatus.Approved => ApprovalStatusValue.Approved,
         ApprovalStatus.Rejected => ApprovalStatusValue.Rejected,
-        _ => ApprovalStatusValue.Pending
+        ApprovalStatus.Pending => ApprovalStatusValue.Pending,
+        _ => throw new ArgumentException($"Invalid status: {status}")
     };
 }

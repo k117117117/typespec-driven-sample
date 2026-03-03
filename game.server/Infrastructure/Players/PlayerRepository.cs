@@ -11,10 +11,18 @@ namespace GameServer.Infrastructure.Players;
 /// </summary>
 internal class PlayerRepository(AppDbContext db) : IPlayerRepository
 {
-    public async Task<IReadOnlyList<Player>> GetAllAsync(CancellationToken cancellationToken = default)
+    public async Task<(IReadOnlyList<Player> Items, int Total)> GetAllAsync(int? offset, int? limit, CancellationToken cancellationToken = default)
     {
-        var entities = await db.Players.AsNoTracking().ToListAsync(cancellationToken);
-        return entities.Select(ToDomain).ToList();
+        var query = db.Players.AsNoTracking();
+        var total = await query.CountAsync(cancellationToken);
+
+        if (offset.HasValue)
+            query = query.Skip(offset.Value);
+        if (limit.HasValue)
+            query = query.Take(limit.Value);
+
+        var entities = await query.ToListAsync(cancellationToken);
+        return (entities.Select(ToDomain).ToList(), total);
     }
 
     public async Task<Player?> GetByIdAsync(int id, CancellationToken cancellationToken = default)

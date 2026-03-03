@@ -10,7 +10,10 @@ namespace SampleGame.Admin;
 @route("/admin-tool-users")
 @tag("AdminToolUsers")
 interface AdminToolUsers {
-  @get list(): Read<AdminToolUser>[] | Error;
+  @list @get list(
+    @offset @query offset?: int32,
+    @pageSize @query limit?: int32,
+  ): Page<Read<AdminToolUser>> | Error;
   @get read(@path id: int32): Read<AdminToolUser> | Error;
   @post create(@body body: Create<AdminToolUser>): CreatedResponse | Error;
   @put update(@path id: int32, @body body: Update<AdminToolUser>): OkResponse | Error;
@@ -20,7 +23,10 @@ interface AdminToolUsers {
 @route("/approval-requests")
 @tag("ApprovalRequests")
 interface ApprovalRequests {
-  @get list(): Read<ApprovalRequest>[] | Error;
+  @list @get list(
+    @offset @query offset?: int32,
+    @pageSize @query limit?: int32,
+  ): Page<Read<ApprovalRequest>> | Error;
   @get read(@path id: int32): Read<ApprovalRequest> | Error;
   @post create(@body body: Create<ApprovalRequest>): CreatedResponse | Error;
   @put update(@path id: int32, @body body: Update<ApprovalRequest>): OkResponse | Error;
@@ -33,7 +39,11 @@ interface ApprovalRequests {
 @route("/players")
 @tag("Players")
 interface Players {
-  @get list(): Read<Player>[] | Error;
+  @list @get list(
+    @offset @query offset?: int32,
+    @pageSize @query limit?: int32,
+  ): Page<Read<Player>> | Error;
+  
   @get read(@path id: int32): Read<Player> | Error;
 }
 

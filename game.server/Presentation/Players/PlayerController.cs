@@ -10,12 +10,15 @@ namespace GameServer.Players;
 /// </summary>
 public class PlayerController(PlayerApplicationService appService) : PlayersControllerBase
 {
-    public override async Task<ActionResult<ICollection<ReadPlayerItem>>> List(CancellationToken cancellationToken = default)
+    public override async Task<ActionResult<Response2>> List(int? offset, int? limit, CancellationToken cancellationToken = default)
     {
-        var players = await appService.GetAllAsync(cancellationToken);
-        ICollection<ReadPlayerItem> result = [.. players.Select(ToListItem)];
+        var (players, total) = await appService.GetAllAsync(offset, limit, cancellationToken);
 
-        return Ok(result);
+        return Ok(new Response2
+        {
+            Items = [.. players.Select(ToListItem)],
+            Total = total
+        });
     }
 
     public override async Task<ActionResult<ReadPlayer>> Read(int id, CancellationToken cancellationToken = default)

@@ -8,9 +8,9 @@ namespace AdminBackend.Application.Players;
 /// </summary>
 public class PlayerQueryApplicationService(IGameServerPlayerClient client)
 {
-    public async Task<IReadOnlyList<PlayerDto>> GetAllAsync(CancellationToken cancellationToken = default)
+    public async Task<PagedResult<PlayerDto>> GetAllAsync(int? offset, int? limit, CancellationToken cancellationToken = default)
     {
-        return await client.GetAllAsync(cancellationToken);
+        return await client.GetAllAsync(offset, limit, cancellationToken);
     }
 
     public async Task<PlayerDto?> GetByIdAsync(int id, CancellationToken cancellationToken = default)

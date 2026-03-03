@@ -8,9 +8,9 @@ namespace AdminBackend.Health;
 /// </summary>
 public class HealthController : HealthControllerBase
 {
-    public override Task<ActionResult<Response>> Check(CancellationToken cancellationToken = default)
+    public override Task<ActionResult<Response3>> Check(CancellationToken cancellationToken = default)
     {
-        var response = new Response { Status = ResponseStatus.Healthy };
-        return Task.FromResult<ActionResult<Response>>(Ok(response));
+        var response = new Response3 { Status = Response3Status.Healthy };
+        return Task.FromResult<ActionResult<Response3>>(Ok(response));
     }
 }

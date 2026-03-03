@@ -8,9 +8,9 @@ namespace AdminBackend.Application.ApprovalRequests;
 /// </summary>
 public class ApprovalRequestApplicationService(IApprovalRequestRepository repository)
 {
-    public async Task<IReadOnlyList<ApprovalRequest>> GetAllAsync(CancellationToken cancellationToken = default)
+    public async Task<(IReadOnlyList<ApprovalRequest> Items, int Total)> GetAllAsync(int? offset, int? limit, CancellationToken cancellationToken = default)
     {
-        return await repository.GetAllAsync(cancellationToken);
+        return await repository.GetAllAsync(offset, limit, cancellationToken);
     }
 
     public async Task<ApprovalRequest?> GetByIdAsync(int id, CancellationToken cancellationToken = default)

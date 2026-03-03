@@ -25,7 +25,7 @@ public class Player
     /// <summary>
     /// 永続化済みデータからドメインモデルを復元する。
     /// </summary>
-    public static Player Reconstruct(int id, string name, int level)
+    internal static Player Reconstruct(int id, string name, int level)
     {
         return new Player { Id = id, Name = name, Level = level };
     }

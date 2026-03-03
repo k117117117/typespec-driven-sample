@@ -10,12 +10,15 @@ namespace AdminBackend.AdminToolUsers;
 /// </summary>
 public class AdminToolUsersController(AdminToolUserApplicationService appService) : AdminToolUsersControllerBase
 {
-    public override async Task<ActionResult<ICollection<ReadAdminToolUserItem>>> List(CancellationToken cancellationToken = default)
+    public override async Task<ActionResult<Response>> List(int? offset, int? limit, CancellationToken cancellationToken = default)
     {
-        var users = await appService.GetAllAsync(cancellationToken);
-        ICollection<ReadAdminToolUserItem> result = [.. users.Select(ToListItem)];
+        var (users, total) = await appService.GetAllAsync(offset, limit, cancellationToken);
 
-        return Ok(result);
+        return Ok(new Response
+        {
+            Items = [.. users.Select(ToListItem)],
+            Total = total
+        });
     }
 
     public override async Task<ActionResult<ReadAdminToolUser>> Read(int id, CancellationToken cancellationToken = default)
@@ -31,7 +34,8 @@ public class AdminToolUsersController(AdminToolUserApplicationService appService
         var role = body.Role switch
         {
             CreateAdminToolUserRole.Admin => AdminToolUserRole.Admin,
-            _ => AdminToolUserRole.Staff
+            CreateAdminToolUserRole.Staff => AdminToolUserRole.Staff,
+            _ => throw new ArgumentException($"不明なロール: {body.Role}")
         };
         var created = await appService.RegisterAsync(body.Name, body.Email, role, cancellationToken);
 
@@ -43,7 +47,8 @@ public class AdminToolUsersController(AdminToolUserApplicationService appService
         var role = body.Role switch
         {
             UpdateAdminToolUserRole.Admin => AdminToolUserRole.Admin,
-            _ => AdminToolUserRole.Staff
+            UpdateAdminToolUserRole.Staff => AdminToolUserRole.Staff,
+            _ => throw new ArgumentException($"不明なロール: {body.Role}")
         };
         var updated = await appService.UpdateAsync(id, body.Name, body.Email, role, cancellationToken);
         if (updated is null) return NotFound();
@@ -67,7 +72,8 @@ public class AdminToolUsersController(AdminToolUserApplicationService appService
         Role = u.Role switch
         {
             AdminToolUserRole.Admin => ReadAdminToolUserItemRole.Admin,
-            _ => ReadAdminToolUserItemRole.Staff
+            AdminToolUserRole.Staff => ReadAdminToolUserItemRole.Staff,
+            _ => throw new ArgumentException($"不明なロール: {u.Role}")
         }
     };
 
@@ -79,7 +85,8 @@ public class AdminToolUsersController(AdminToolUserApplicationService appService
         Role = u.Role switch
         {
             AdminToolUserRole.Admin => ReadAdminToolUserRole.Admin,
-            _ => ReadAdminToolUserRole.Staff
+            AdminToolUserRole.Staff => ReadAdminToolUserRole.Staff,
+            _ => throw new ArgumentException($"不明なロール: {u.Role}")
         }
     };
 }
