@@ -135,7 +135,7 @@ admin.frontend (App.tsx)
 │
 ├── typespec/                # TypeSpec スキーマ定義
 │   ├── shared/
-│   │   └── model.tsp        # 全サービス共通の基盤モデル (Error, Player)
+│   │   └── model.tsp        # 全サービス共通の基盤モデル (Error, Player, Page)
 │   ├── admin/
 │   │   ├── main.tsp         # admin エントリポイント
 │   │   ├── model.tsp        # admin 固有モデル

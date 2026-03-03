@@ -14,7 +14,7 @@ game.server/
 │   ├── GameServer.Application.csproj       ← Domain + Application (pure C# classlib, RootNamespace: GameServer)
 │   ├── Domain/
 │   │   └── <Resource>/
-│   │       ├── Models/<Resource>.cs        ← Domain model (internal Create/Update, public Reconstruct)
+│   │       ├── Models/<Resource>.cs        ← Domain model (internal Create/Update/Reconstruct)
 │   │       └── Repositories/I<Resource>Repository.cs
 │   └── Application/
 │       └── <Resource>/
@@ -39,15 +39,16 @@ game.server/
 
 ## `internal` Modifier Usage
 
-- Domain: `Create()`, `Update*()` methods → prevents Controller from bypassing ApplicationService
+- Domain: `Create()`, `Update*()`, `Reconstruct()` methods → prevents bypassing ApplicationService or Repository
 - Infrastructure: Entity, Repository, AppDbContext → prevents Web from bypassing Repository
+- Application csproj has `InternalsVisibleTo` for Infrastructure (so Repository can call `Reconstruct`)
 
 ## Adding a New API Resource (C# Side)
 
 After running `npm run tsp-and-nswag` (see `typespec/AGENTS.md` for TypeSpec steps):
 
 1. **Domain layer** (`Application/Domain/<ResourceName>/`):
-   - `Models/<ResourceName>.cs` — Domain model with `internal` factory/mutation methods, `public` Reconstruct and properties.
+   - `Models/<ResourceName>.cs` — Domain model with `internal` factory/mutation/reconstruct methods, `public` properties only.
    - `Repositories/I<ResourceName>Repository.cs` — Repository interface.
 
 2. **Application layer** (`Application/Application/<ResourceName>/`):

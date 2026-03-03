@@ -5,7 +5,7 @@
 ```
 typespec/
 ├── shared/
-│   └── model.tsp          # 全サービス共通の基盤モデル（Error, Player 等）
+│   └── model.tsp          # 全サービス共通の基盤モデル（Error, Player, Page<T> 等）
 ├── admin/
 │   ├── main.tsp            # サービスエントリポイント
 │   ├── model.tsp           # admin 固有モデル（AdminToolUser, ApprovalRequest 等）
@@ -25,7 +25,7 @@ typespec/
 
 ### shared/model.tsp は「基盤となる概念」を定義する場所
 
-複数サービスで共通して使うモデル（Player, Error 等）を定義する。
+複数サービスで共通して使うモデル（Player, Error, Page\<T\> 等）を定義する。
 各サービスの `main.tsp` や `operations.tsp` から `import "../shared/model.tsp"` で参照できる。
 
 ### サービス固有の拡張は各サービスの model.tsp で行う
@@ -103,7 +103,7 @@ API に露出しないが DB には必要なエンティティ（監査ログ、
 ## 新しいリソースを追加する手順
 
 1. モデルを定義（共通なら `shared/model.tsp`、固有なら `<service>/model.tsp`）
-2. ルートを `<service>/operations.tsp` に定義（`interface` + `Read<T>`, `Create<T>`, `Update<T>` ラッパー）
+2. ルートを `<service>/operations.tsp` に定義（`interface` + `Read<T>`, `Create<T>`, `Update<T>` ラッパー）。一覧取得にはページネーションデコレータ（`@list`, `@offset`, `@pageSize`）を使い、`Page<Read<T>>` を返す
 3. `npm run tsp-and-nswag` を実行
 4. `<service>/Controllers/` に実装コントローラーを作成（生成された抽象クラスを継承）
 5. `<service>/Data/` に EF Core エンティティを作成し、`AppDbContext.cs` に `DbSet` を登録

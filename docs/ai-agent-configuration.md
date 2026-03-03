@@ -38,6 +38,7 @@ admin.frontend/AGENTS.md     ← ファイル構成、UI 追加手順、apiClien
 
 - ディレクトリ構成
 - モデル共有の考え方（`extends` vs `...` Spread の使い分け）
+- ページネーション（`Page<T>` モデル、`@list` / `@offset` / `@pageSize` デコレータ）
 - 新リソース追加手順（TypeSpec 側: モデル定義 → ルート定義 → コンパイル）
 - 孤立エンティティ自動クリーンアップの仕組み
 
