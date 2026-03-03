@@ -11,7 +11,7 @@ services:
       - admin-frontend-node-modules:/app/node_modules
     environment:
       - VITE_API_URL=http://localhost:5000
-      - VITE_SCHEMA_URL=http://localhost:5000/openapi.json
+      - VITE_SCHEMA_URL=http://localhost:5000/openapi.admin.json
     ports:
       - "3000:3000"
     depends_on:
@@ -26,7 +26,7 @@ services:
       dockerfile: admin.backend/Dockerfile
     volumes:
       - ./admin.backend:/src/admin.backend
-      - ./typespec/tsp-output/schema:/src/admin.backend/Presentation/openapi-schema:ro
+      - ./typespec/tsp-output/schema:/src/admin.backend/Presentation/wwwroot:ro
       - admin-backend-pres-obj:/src/admin.backend/Presentation/obj
       - admin-backend-pres-bin:/src/admin.backend/Presentation/bin
       - admin-backend-app-obj:/src/admin.backend/Application/obj

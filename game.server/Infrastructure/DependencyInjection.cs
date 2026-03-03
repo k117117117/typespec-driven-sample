@@ -23,12 +23,12 @@ public static class DependencyInjection
     }
 
     /// <summary>
-    /// データベースの自動作成（開発環境のみ）。
+    /// データベースのマイグレーション適用（開発環境のみ）。
     /// </summary>
-    public static void EnsureDatabaseCreated(IServiceProvider services)
+    public static void MigrateDatabase(IServiceProvider services)
     {
         using var scope = services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-        db.Database.EnsureCreated();
+        db.Database.Migrate();
     }
 }
