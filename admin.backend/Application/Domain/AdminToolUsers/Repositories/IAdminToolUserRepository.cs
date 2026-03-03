@@ -7,7 +7,7 @@ namespace AdminBackend.Domain.AdminToolUsers.Repositories;
 /// </summary>
 public interface IAdminToolUserRepository
 {
-    Task<IReadOnlyList<AdminToolUser>> GetAllAsync(CancellationToken cancellationToken = default);
+    Task<(IReadOnlyList<AdminToolUser> Items, int Total)> GetAllAsync(int? offset, int? limit, CancellationToken cancellationToken = default);
     Task<AdminToolUser?> GetByIdAsync(int id, CancellationToken cancellationToken = default);
     Task<AdminToolUser> AddAsync(AdminToolUser user, CancellationToken cancellationToken = default);
     Task UpdateAsync(AdminToolUser user, CancellationToken cancellationToken = default);

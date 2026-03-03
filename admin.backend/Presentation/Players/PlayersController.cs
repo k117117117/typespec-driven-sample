@@ -9,17 +9,20 @@ namespace AdminBackend.Players;
 /// </summary>
 public class PlayersController(PlayerQueryApplicationService appService) : PlayersControllerBase
 {
-    public override async Task<ActionResult<ICollection<ReadPlayerItem>>> List(CancellationToken cancellationToken = default)
+    public override async Task<ActionResult<Response4>> List(int? offset, int? limit, CancellationToken cancellationToken = default)
     {
-        var players = await appService.GetAllAsync(cancellationToken);
-        ICollection<ReadPlayerItem> result = [.. players.Select(p => new ReadPlayerItem
-        {
-            Id = p.Id,
-            Name = p.Name,
-            Level = p.Level
-        })];
+        var result = await appService.GetAllAsync(offset, limit, cancellationToken);
 
-        return Ok(result);
+        return Ok(new Response4
+        {
+            Items = [.. result.Items.Select(p => new ReadPlayerItem
+            {
+                Id = p.Id,
+                Name = p.Name,
+                Level = p.Level
+            })],
+            Total = result.Total
+        });
     }
 
     public override async Task<ActionResult<ReadPlayer>> Read(int id, CancellationToken cancellationToken = default)

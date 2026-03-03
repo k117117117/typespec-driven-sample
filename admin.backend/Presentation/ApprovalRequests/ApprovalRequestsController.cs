@@ -10,12 +10,15 @@ namespace AdminBackend.ApprovalRequests;
 /// </summary>
 public class ApprovalRequestsController(ApprovalRequestApplicationService appService) : ApprovalRequestsControllerBase
 {
-    public override async Task<ActionResult<ICollection<ReadApprovalRequestItem>>> List(CancellationToken cancellationToken = default)
+    public override async Task<ActionResult<Response2>> List(int? offset, int? limit, CancellationToken cancellationToken = default)
     {
-        var requests = await appService.GetAllAsync(cancellationToken);
-        ICollection<ReadApprovalRequestItem> result = [.. requests.Select(ToListItem)];
+        var (requests, total) = await appService.GetAllAsync(offset, limit, cancellationToken);
 
-        return Ok(result);
+        return Ok(new Response2
+        {
+            Items = [.. requests.Select(ToListItem)],
+            Total = total
+        });
     }
 
     public override async Task<ActionResult<ReadApprovalRequest>> Read(int id, CancellationToken cancellationToken = default)
@@ -73,7 +76,8 @@ public class ApprovalRequestsController(ApprovalRequestApplicationService appSer
         {
             ApprovalStatus.Approved => ReadApprovalRequestItemStatus.Approved,
             ApprovalStatus.Rejected => ReadApprovalRequestItemStatus.Rejected,
-            _ => ReadApprovalRequestItemStatus.Pending
+            ApprovalStatus.Pending => ReadApprovalRequestItemStatus.Pending,
+            _ => throw new ArgumentException($"不明なステータス: {r.Status}")
         },
         CreatedAt = r.CreatedAt,
         UpdatedAt = r.UpdatedAt
@@ -87,7 +91,8 @@ public class ApprovalRequestsController(ApprovalRequestApplicationService appSer
         {
             ApprovalStatus.Approved => ReadApprovalRequestStatus.Approved,
             ApprovalStatus.Rejected => ReadApprovalRequestStatus.Rejected,
-            _ => ReadApprovalRequestStatus.Pending
+            ApprovalStatus.Pending => ReadApprovalRequestStatus.Pending,
+            _ => throw new ArgumentException($"不明なステータス: {r.Status}")
         },
         CreatedAt = r.CreatedAt,
         UpdatedAt = r.UpdatedAt

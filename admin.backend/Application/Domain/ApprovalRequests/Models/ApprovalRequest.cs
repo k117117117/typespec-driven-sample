@@ -34,7 +34,7 @@ public class ApprovalRequest
     /// <summary>
     /// 永続化済みデータからドメインモデルを復元する。
     /// </summary>
-    public static ApprovalRequest Reconstruct(int id, string reason, ApprovalStatus status, DateTimeOffset createdAt, DateTimeOffset updatedAt)
+    internal static ApprovalRequest Reconstruct(int id, string reason, ApprovalStatus status, DateTimeOffset createdAt, DateTimeOffset updatedAt)
     {
         return new ApprovalRequest { Id = id, Reason = reason, Status = status, CreatedAt = createdAt, UpdatedAt = updatedAt };
     }
@@ -56,6 +56,9 @@ public class ApprovalRequest
     /// </summary>
     internal void Approve()
     {
+        if (Status != ApprovalStatus.Pending)
+            throw new InvalidOperationException($"承認できるのは Pending 状態のリクエストのみです。現在の状態: {Status}");
+
         Status = ApprovalStatus.Approved;
         UpdatedAt = DateTimeOffset.UtcNow;
     }
@@ -65,6 +68,9 @@ public class ApprovalRequest
     /// </summary>
     internal void Reject()
     {
+        if (Status != ApprovalStatus.Pending)
+            throw new InvalidOperationException($"却下できるのは Pending 状態のリクエストのみです。現在の状態: {Status}");
+
         Status = ApprovalStatus.Rejected;
         UpdatedAt = DateTimeOffset.UtcNow;
     }

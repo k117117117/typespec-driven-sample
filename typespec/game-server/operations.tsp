@@ -10,7 +10,10 @@ namespace SampleGame.GameServer;
 @route("/players")
 @tag("Players")
 interface Players {
-  @get list(): Read<Player>[] | Error;
+  @list @get list(
+    @offset @query offset?: int32,
+    @pageSize @query limit?: int32,
+  ): Page<Read<Player>> | Error;
   @get read(@path id: int32): Read<Player> | Error;
   @post create(@body body: Create<Player>): CreatedResponse | Error;
   @put update(@path id: int32, @body body: Update<Player>): OkResponse | Error;

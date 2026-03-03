@@ -28,7 +28,7 @@ public class AdminToolUser
     /// <summary>
     /// 永続化済みデータからドメインモデルを復元する。
     /// </summary>
-    public static AdminToolUser Reconstruct(int id, string name, string email, AdminToolUserRole role)
+    internal static AdminToolUser Reconstruct(int id, string name, string email, AdminToolUserRole role)
     {
         return new AdminToolUser { Id = id, Name = name, Email = email, Role = role };
     }

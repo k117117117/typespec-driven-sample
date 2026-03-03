@@ -10,10 +10,18 @@ namespace AdminBackend.Infrastructure.AdminToolUsers;
 /// </summary>
 internal class AdminToolUserRepository(AppDbContext db) : IAdminToolUserRepository
 {
-    public async Task<IReadOnlyList<AdminToolUser>> GetAllAsync(CancellationToken cancellationToken = default)
+    public async Task<(IReadOnlyList<AdminToolUser> Items, int Total)> GetAllAsync(int? offset, int? limit, CancellationToken cancellationToken = default)
     {
-        var entities = await db.AdminToolUsers.AsNoTracking().ToListAsync(cancellationToken);
-        return entities.Select(ToDomain).ToList();
+        var query = db.AdminToolUsers.AsNoTracking();
+        var total = await query.CountAsync(cancellationToken);
+
+        if (offset.HasValue)
+            query = query.Skip(offset.Value);
+        if (limit.HasValue)
+            query = query.Take(limit.Value);
+
+        var entities = await query.ToListAsync(cancellationToken);
+        return (entities.Select(ToDomain).ToList(), total);
     }
 
     public async Task<AdminToolUser?> GetByIdAsync(int id, CancellationToken cancellationToken = default)
@@ -65,12 +73,15 @@ internal class AdminToolUserRepository(AppDbContext db) : IAdminToolUserReposito
     private static AdminToolUserRole ToDomainRole(AdminToolUserRoleValue role) => role switch
     {
         AdminToolUserRoleValue.Admin => AdminToolUserRole.Admin,
-        _ => AdminToolUserRole.Staff
+        AdminToolUserRoleValue.Staff => AdminToolUserRole.Staff,
+        _ => throw new ArgumentException($"Invalid role value: {role}")
+        
     };
 
     private static AdminToolUserRoleValue ToEntityRole(AdminToolUserRole role) => role switch
     {
         AdminToolUserRole.Admin => AdminToolUserRoleValue.Admin,
-        _ => AdminToolUserRoleValue.Staff
+        AdminToolUserRole.Staff => AdminToolUserRoleValue.Staff,
+        _ => throw new ArgumentException($"Invalid role: {role}")
     };
 }

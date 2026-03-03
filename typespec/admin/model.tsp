@@ -3,7 +3,9 @@ namespace SampleGame;
 // adminに固有のモデルを定義
 
 model AdminToolUser {
+  @visibility(Lifecycle.Read)
   id: int32;
+  
   name: string;
   email: string;
   role: "admin" | "staff";

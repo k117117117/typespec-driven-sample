@@ -8,9 +8,9 @@ namespace GameServer.Application.Players;
 /// </summary>
 public class PlayerApplicationService(IPlayerRepository repository)
 {
-    public async Task<IReadOnlyList<Player>> GetAllAsync(CancellationToken cancellationToken = default)
+    public async Task<(IReadOnlyList<Player> Items, int Total)> GetAllAsync(int? offset, int? limit, CancellationToken cancellationToken = default)
     {
-        return await repository.GetAllAsync(cancellationToken);
+        return await repository.GetAllAsync(offset, limit, cancellationToken);
     }
 
     public async Task<Player?> GetByIdAsync(int id, CancellationToken cancellationToken = default)
