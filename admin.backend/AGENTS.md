@@ -20,9 +20,12 @@ admin.backend/
 │       └── <Resource>/
 │           └── <Resource>ApplicationService.cs ← Use case orchestration
 └── Infrastructure/
-    ├── AdminBackend.Infrastructure.csproj   ← EF Core, Npgsql (→ Application reference)
+    ├── AdminBackend.Infrastructure.csproj   ← EF Core, Npgsql, NSwag client gen (→ Application reference)
     ├── DependencyInjection.cs              ← Public DI extension method
+    ├── nswag.gameserver-client.json        ← NSwag config: game.server OpenAPI → C# API client
+    ├── Generated/GameServerClient.g.cs     ← NSwag auto-generated API client (do not edit)
     ├── Data/AppDbContext.cs                ← internal DbContext
+    ├── Players/GameServerPlayerClient.cs   ← IGameServerPlayerClient impl (delegates to generated PlayersClient)
     └── <Resource>/
         ├── <Resource>Entity.cs             ← internal EF Core entity
         └── <Resource>Repository.cs         ← internal repository implementation

@@ -1,3 +1,4 @@
+using GameServer;
 using GameServer.Application.Players;
 using GameServer.Infrastructure;
 using Scalar.AspNetCore;
@@ -8,7 +9,7 @@ builder.Services.AddControllers();
 builder.Services.AddScoped<PlayerApplicationService>();
 builder.Services.AddInfrastructure(
     builder.Configuration.GetConnectionString("DefaultConnection")
-        ?? "Host=localhost;Port=5432;Database=gameserver;Username=postgres;Password=postgres");
+    ?? "Host=localhost;Port=5432;Database=gameserver;Username=postgres;Password=postgres");
 
 builder.Services.AddCors(options =>
 {
@@ -25,17 +26,17 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
-// Auto-create database (development only; use Migrations in production)
 if (app.Environment.IsDevelopment())
 {
-    DependencyInjection.EnsureDatabaseCreated(app.Services);
+    DependencyInjection.MigrateDatabase(app.Services);
 }
+
+app.UseMiddleware<GlobalExceptionHandlerMiddleware>();
 
 app.UseCors();
 
 if (app.Environment.IsDevelopment())
 {
-    // https://scalar.com/products/api-references/integrations/aspnetcore/integration#openapi-document-route
     app.MapScalarApiReference(options =>
     {
         options.WithOpenApiRoutePattern("/openapi.json");
@@ -43,7 +44,6 @@ if (app.Environment.IsDevelopment())
 
     app.MapGet("/openapi.json", async () =>
     {
-        // TypeSpec から生成された OpenAPI スキーマ (docker-compose でマウント)
         var path = Path.Combine(app.Environment.ContentRootPath, "openapi-schema", "openapi.gameserver.json");
         if (!File.Exists(path))
             return Results.NotFound("openapi.json not found. Run 'npm run tsp-and-nswag' to generate it.");

@@ -1,3 +1,4 @@
+using AdminBackend;
 using AdminBackend.Application.AdminToolUsers;
 using AdminBackend.Application.ApprovalRequests;
 using AdminBackend.Application.Players;
@@ -12,9 +13,9 @@ builder.Services.AddScoped<ApprovalRequestApplicationService>();
 builder.Services.AddScoped<PlayerQueryApplicationService>();
 builder.Services.AddInfrastructure(
     builder.Configuration.GetConnectionString("DefaultConnection")
-        ?? "Host=localhost;Port=5432;Database=admin;Username=postgres;Password=postgres",
+    ?? "Host=localhost;Port=5432;Database=admin;Username=postgres;Password=postgres",
     builder.Configuration["GameServer:BaseUrl"]
-        ?? "http://localhost:5001");
+    ?? "http://localhost:5001");
 
 builder.Services.AddCors(options =>
 {
@@ -32,33 +33,23 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
-// Auto-create database (development only; use Migrations in production)
 if (app.Environment.IsDevelopment())
 {
-    DependencyInjection.EnsureDatabaseCreated(app.Services);
+    DependencyInjection.MigrateDatabase(app.Services);
 }
 
+app.UseMiddleware<GlobalExceptionHandlerMiddleware>();
+
 app.UseCors();
+app.UseStaticFiles();
 
 if (app.Environment.IsDevelopment())
 {
-    // https://scalar.com/products/api-references/integrations/aspnetcore/integration#openapi-document-route
     app.MapScalarApiReference(options =>
     {
-        options.WithOpenApiRoutePattern("/openapi.json");
+        options.WithOpenApiRoutePattern("/openapi.admin.json");
     });
 }
 app.MapControllers();
-
-app.MapGet("/openapi.json", async () =>
-{
-    // TypeSpec から生成された OpenAPI スキーマ (docker-compose でマウント)
-    var path = Path.Combine(app.Environment.ContentRootPath, "openapi-schema", "openapi.admin.json");
-    if (!File.Exists(path))
-        return Results.NotFound("openapi.json not found. Run 'npm run tsp-and-nswag' to generate it.");
-
-    var json = await File.ReadAllTextAsync(path);
-    return Results.Text(json, "application/json");
-});
 
 app.Run();

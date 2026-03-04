@@ -1,6 +1,7 @@
 using AdminBackend.Domain.AdminToolUsers.Repositories;
 using AdminBackend.Domain.ApprovalRequests.Repositories;
 using AdminBackend.Domain.Players.Services;
+using AdminBackend.Generated.GameServer;
 using AdminBackend.Infrastructure.AdminToolUsers;
 using AdminBackend.Infrastructure.ApprovalRequests;
 using AdminBackend.Infrastructure.Data;
@@ -23,21 +24,22 @@ public static class DependencyInjection
         services.AddScoped<IAdminToolUserRepository, AdminToolUserRepository>();
         services.AddScoped<IApprovalRequestRepository, ApprovalRequestRepository>();
 
-        services.AddHttpClient<IGameServerPlayerClient, GameServerPlayerClient>(client =>
+        services.AddHttpClient<PlayersClient>(client =>
         {
             client.BaseAddress = new Uri(gameServerBaseUrl);
         });
+        services.AddScoped<IGameServerPlayerClient, GameServerPlayerClient>();
 
         return services;
     }
 
     /// <summary>
-    /// データベースの自動作成（開発環境のみ）。
+    /// データベースのマイグレーション適用（開発環境のみ）。
     /// </summary>
-    public static void EnsureDatabaseCreated(IServiceProvider services)
+    public static void MigrateDatabase(IServiceProvider services)
     {
         using var scope = services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-        db.Database.EnsureCreated();
+        db.Database.Migrate();
     }
 }
