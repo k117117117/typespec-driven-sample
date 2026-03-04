@@ -8,7 +8,6 @@ namespace GameServer.Infrastructure;
 
 /// <summary>
 /// Infrastructure 層の DI 登録を行う拡張メソッド。
-/// Web プロジェクトから internal クラスに直接アクセスさせないための公開 API。
 /// </summary>
 public static class DependencyInjection
 {
