@@ -1,6 +1,7 @@
 using AdminBackend.Domain.AdminToolUsers.Repositories;
 using AdminBackend.Domain.ApprovalRequests.Repositories;
 using AdminBackend.Domain.Players.Services;
+using AdminBackend.Generated.GameServer;
 using AdminBackend.Infrastructure.AdminToolUsers;
 using AdminBackend.Infrastructure.ApprovalRequests;
 using AdminBackend.Infrastructure.Data;
@@ -23,10 +24,11 @@ public static class DependencyInjection
         services.AddScoped<IAdminToolUserRepository, AdminToolUserRepository>();
         services.AddScoped<IApprovalRequestRepository, ApprovalRequestRepository>();
 
-        services.AddHttpClient<IGameServerPlayerClient, GameServerPlayerClient>(client =>
+        services.AddHttpClient<PlayersClient>(client =>
         {
             client.BaseAddress = new Uri(gameServerBaseUrl);
         });
+        services.AddScoped<IGameServerPlayerClient, GameServerPlayerClient>();
 
         return services;
     }

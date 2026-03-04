@@ -1,26 +1,29 @@
-using System.Net.Http.Json;
 using AdminBackend.Domain.Players.Services;
+using AdminBackend.Generated.GameServer;
 
 namespace AdminBackend.Infrastructure.Players;
 
 /// <summary>
-/// Game Server API を呼び出してプレイヤー情報を取得する HttpClient 実装。
+/// NSwag 生成クライアントを使って Game Server API からプレイヤー情報を取得する実装。
 /// </summary>
-public class GameServerPlayerClient(HttpClient httpClient) : IGameServerPlayerClient
+public class GameServerPlayerClient(PlayersClient playersClient) : IGameServerPlayerClient
 {
     public async Task<IReadOnlyList<PlayerDto>> GetAllAsync(CancellationToken cancellationToken = default)
     {
-        var players = await httpClient.GetFromJsonAsync<List<PlayerDto>>("/players", cancellationToken);
-        return players ?? [];
+        var players = await playersClient.ListAsync(cancellationToken);
+        return players.Select(p => new PlayerDto(p.Id, p.Name, p.Level)).ToList();
     }
 
     public async Task<PlayerDto?> GetByIdAsync(int id, CancellationToken cancellationToken = default)
     {
-        var response = await httpClient.GetAsync($"/players/{id}", cancellationToken);
-        if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+        try
+        {
+            var player = await playersClient.ReadAsync(id, cancellationToken);
+            return new PlayerDto(player.Id, player.Name, player.Level);
+        }
+        catch (ApiException ex) when (ex.StatusCode == 404)
+        {
             return null;
-
-        response.EnsureSuccessStatusCode();
-        return await response.Content.ReadFromJsonAsync<PlayerDto>(cancellationToken);
+        }
     }
 }
