@@ -5,7 +5,7 @@
 ```
 typespec/
 ├── shared/
-│   └── model.tsp          # Common models shared across all services (Error, Player, etc.)
+│   └── model.tsp          # Common models shared across all services (Error, Player, Page<T>, etc.)
 ├── admin/
 │   ├── main.tsp            # Service entry point
 │   ├── model.tsp           # Admin-specific models (AdminToolUser, ApprovalRequest, etc.)
@@ -23,7 +23,7 @@ typespec/
 
 ## Model Sharing
 
-- `shared/model.tsp` defines **foundational concepts** (Player, Error, etc.). All services can `import` from it.
+- `shared/model.tsp` defines **foundational concepts** (Player, Error, Page\<T\>, etc.). All services can `import` from it.
 - Service-specific extensions use `extends` or `...` (Spread) in `<service>/model.tsp`.
 
 ```typespec
@@ -47,7 +47,7 @@ model ManagedPlayer { ...Player; isBanned: boolean; }
 ## Adding a New Resource (TypeSpec Side)
 
 1. Define the model in `<service>/model.tsp` (or `shared/model.tsp` if shared). Use `@visibility(Lifecycle.Read)` for read-only fields.
-2. Define CRUD routes in `<service>/operations.tsp` as a TypeSpec `interface` using `Read<T>`, `Create<T>`, `Update<T>` lifecycle wrappers.
+2. Define CRUD routes in `<service>/operations.tsp` as a TypeSpec `interface` using `Read<T>`, `Create<T>`, `Update<T>` lifecycle wrappers. For list operations, use pagination decorators (`@list`, `@offset`, `@pageSize`) and return `Page<Read<T>>`.
 3. Run `npm run tsp-and-nswag` to regenerate OpenAPI JSON, TypeScript types, `Controllers.g.cs`, and clean up orphan entities.
 
 Then proceed to the C# side — see the relevant service's AGENTS.md (`admin.backend/` or `game.server/`).
