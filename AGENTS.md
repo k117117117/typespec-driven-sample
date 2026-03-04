@@ -25,6 +25,8 @@ admin.frontend/src/generated/admin.d.ts      ← TypeScript types
 admin.frontend/src/generated/resources.g.ts  ← CRUD resource name constants
          ↓ (NSwag)
 <service>/Presentation/Generated/Controllers.g.cs ← Abstract controllers + DTOs
+         ↓ (NSwag, cross-service)
+admin.backend/Infrastructure/Generated/GameServerClient.g.cs ← C# API client for game.server
          ↓ (manual)
 <service>/Presentation/<Resource>/    ← Implementation controllers
 ```
@@ -47,7 +49,7 @@ npm run tsp-and-nswag                        # TypeSpec compile + TS types + res
 npm run tsp:compile                          # TypeSpec → openapi.json + TypeScript types + resources.g.ts (all services)
 npm run tsp:compile:admin                    # admin only (OpenAPI + TS types + resources)
 npm run tsp:compile:game-server              # game-server only
-npm run nswag:generate                       # openapi.json → C# controllers (all)
+npm run nswag:generate                       # openapi.json → C# controllers + API clients (all)
 npm run clean:orphan-entities                # Detect/delete orphan *Entity.cs files
 npm run generate:resources                   # openapi.json → resources.g.ts (admin.frontend/)
 npm run build:backend                        # dotnet build
@@ -61,6 +63,7 @@ No test suite exists in this project.
 ## Files You Must NOT Edit by Hand
 
 - `*/Presentation/Generated/Controllers.g.cs` — NSwag auto-generated. Regenerate: `npm run nswag:generate`
+- `admin.backend/Infrastructure/Generated/GameServerClient.g.cs` — NSwag auto-generated API client. Regenerate: `npm run nswag:generate` or `dotnet build` (Infrastructure)
 - `typespec/tsp-output/` — TypeSpec compiler output. Regenerate: `npm run tsp:compile`
 - `admin.frontend/src/generated/` — openapi-typescript / generate-resources output. Regenerate: `npm run tsp:compile`
 
@@ -69,7 +72,7 @@ No test suite exists in this project.
 | Layer | Technology |
 |---|---|
 | Schema | TypeSpec → OpenAPI 3.1 JSON |
-| Code gen (backend) | NSwag (`openapi2cscontroller`, abstract style) |
+| Code gen (backend) | NSwag (`openapi2cscontroller` for controllers, `openapi2csclient` for API clients) |
 | Code gen (frontend) | openapi-typescript (OpenAPI → TypeScript types) |
 | Backend | ASP.NET Core 10, EF Core, PostgreSQL 17 |
 | Frontend | React 19, Vite, API Platform Admin (react-admin), openapi-fetch |
